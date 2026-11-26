@@ -596,33 +596,33 @@ function renderModesPage() {
 
 function renderPrivacyPage() {
   const title = '隐私保护说明 - 高中选科助手';
-  const description = '高中选科助手隐私保护政策：所有学生称呼、历次考试成绩、班级与年级排名均仅保存在用户本机浏览器本地，服务端不存储、不共享个人成绩数据。';
+  const description = '高中选科助手隐私保护说明：所有孩子的称呼、历次考试成绩、班级与年级排名均仅保存在您自己的手机或电脑浏览器中，我们不留存、不共享任何个人成绩信息。';
   const bodyHtml = `
     <article class="doc-sheet report-doc">
       <div class="report-header-card">
         <div class="report-header-top">
           <div>
             <h2 class="report-title">隐私保护说明</h2>
-            <p class="hint">生效日期：2026 年 · 适用于「高中选科助手」全部 Web 服务</p>
+            <p class="hint">生效日期：2026 年 · 适用于「高中选科助手」全部页面</p>
           </div>
         </div>
       </div>
 
       <section class="doc-section" style="margin-top:20px;padding-top:20px;">
-        <h3 class="doc-h3">一、成绩数据的本地存储原则</h3>
-        <p class="policy-desc">「高中选科助手」采用<strong>纯本机浏览器存储（localStorage）</strong>机制。您在页面中填写的学生称呼、历次月考/期中/期末成绩、班级排名、年级排名以及手动暂存快照，均仅保存在您当前使用的手机或电脑浏览器内，不会写入服务端公共草稿库，也不会被其他用户看到。</p>
+        <h3 class="doc-h3">一、孩子的成绩只保存在您自己的设备里</h3>
+        <p class="policy-desc">您在页面中填写的孩子称呼、历次月考/期中/期末成绩、班级排名、年级排名以及点击「暂存成绩」保存的内容，<strong>全部只保存在您当前使用的手机或电脑浏览器中</strong>，不会上传存成公开记录，也不会被任何其他家长或学生看到。</p>
       </section>
 
       <section class="doc-section">
-        <h3 class="doc-h3">二、分析请求的数据处理</h3>
-        <p class="policy-desc">当您点击「生成选科与就业白皮书」时，浏览器仅将本次计算所需的分数与排名参数发送至后端计算引擎，实时完成学科趋势分析与高校专业覆盖率匹配后即刻返回结果；服务端<strong>不会持久化保存</strong>您的个人成绩记录。</p>
+        <h3 class="doc-h3">二、生成选科报告时会留存成绩吗？</h3>
+        <p class="policy-desc">当您点击「生成选科与就业白皮书」时，系统只会即时计算本次所需的成绩趋势与高校专业匹配结果，并立刻返回给您查看，<strong>不会在网站上留存或备份您孩子的个人成绩</strong>。</p>
       </section>
 
       <section class="doc-section">
-        <h3 class="doc-h3">三、您对数据的控制权</h3>
+        <h3 class="doc-h3">三、随时可以一键清空</h3>
         <ul class="policy-list">
-          <li>您可以随时点击页面中的「清空」按钮清除当前表单数据。</li>
-          <li>您也可以随时通过浏览器设置清除本站的本地存储（Local Storage / Site Data），彻底删除所有本地草稿与缓存报告。</li>
+          <li>您可以随时点击成绩录入页右上角的「清空」按钮，清除当前填写的所有成绩。</li>
+          <li>您也可以在浏览器设置中清除本站的浏览数据，彻底移除保存在您手机或电脑上的所有记录与报告。</li>
         </ul>
       </section>
 
