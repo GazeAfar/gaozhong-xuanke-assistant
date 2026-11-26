@@ -32,8 +32,11 @@
 ├── packages/             # 共享类型契约与纯函数规则引擎（TypeScript）
 ├── data/                 # 官方选科数据目录（data/runtime/ 已忽略，不入库）
 ├── deploy/               # 生产部署文件（Dockerfile、Nginx、systemd、阿里云指南）
-└── tests/                # 自动化测试套件（29 项用例）
+├── tests/                # 自动化测试套件（29 项用例）
+└── PROVINCE_GUIDE.md     # 新省份接入与全站页面/导航/SEO 规范指南
 ```
+
+> **扩展新省份**：新增其他省份（3+1+2 或 3+3）前，请先阅读 [PROVINCE_GUIDE.md](./PROVINCE_GUIDE.md)。
 
 ## 快速开始
 
