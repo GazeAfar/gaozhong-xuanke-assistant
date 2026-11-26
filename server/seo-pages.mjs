@@ -139,7 +139,7 @@ function renderLayout({ title, description, keywords, jsonLd, bodyHtml, canonica
   <meta property="og:image" content="${escapeHtml(origin)}/logo.jpg?v=2" />
   <meta name="twitter:card" content="summary" />
   <link rel="icon" type="image/jpeg" href="/logo.jpg?v=2" />
-  <link rel="stylesheet" href="/styles.css?v=66" />
+  <link rel="stylesheet" href="/styles.css?v=67" />
   <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-K9LT3P6G"></script>
   <script>
     window.dataLayer = window.dataLayer || [];

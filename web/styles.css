@@ -2709,13 +2709,15 @@ summary:focus:not(:focus-visible) {
 
   .topbar-actions {
     order: 2;
-    gap: 6px;
+    gap: 8px;
   }
 
   .topbar-actions .btn {
-    min-height: 34px;
-    padding: 5px 10px;
-    font-size: 12.5px;
+    height: 36px;
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 13px;
+    line-height: 1;
   }
 
   .nav-toggle {
