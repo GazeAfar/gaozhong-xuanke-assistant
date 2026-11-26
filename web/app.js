@@ -1213,8 +1213,8 @@ function renderReport(data) {
   `
     : '';
 
-  const metricExplainHtml = `
-    <details class="metric-explain-box no-print">
+  const buildMetricExplainHtml = (extraClass = '') => `
+    <details class="metric-explain-box ${extraClass}">
       <summary>指标说明：什么是「学科实力分」和「综合推荐指数」？</summary>
       <ul class="metric-explain-list">
         <li><strong>学科实力分（满分 100）</strong>：不是简单把三科卷面分相加，而是贴合江苏等级赋分规则，按 <strong>60% 排名位置 + 40% 卷面加权均分</strong> 综合得出（近期明显上升 +1.5 分，有所下滑 -1.5 分）。因此<strong>卷子难、卷面分略低但排名靠前</strong>的科目，实力分会比<strong>分数略高但排名靠后</strong>的科目更高；未填排名的科目则按卷面分估算。</li>
@@ -1284,7 +1284,7 @@ function renderReport(data) {
             <button type="button" class="btn btn-ghost" id="btn-collapse-all-recs">只看首选</button>
           </div>
         </div>
-        ${metricExplainHtml}
+        ${buildMetricExplainHtml('print-expand-details')}
         ${recsHtml}
       </section>
     </div>
@@ -1297,7 +1297,7 @@ function renderReport(data) {
         </div>
         <button type="button" class="btn btn-secondary desktop-only no-print" id="btn-back-report">← 返回白皮书</button>
       </div>
-      ${metricExplainHtml}
+      ${buildMetricExplainHtml('no-print')}
       <div class="mobile-scroll-hint no-print">← 左右滑动查看完整表格 →</div>
       <div class="table-wrap">
         <table class="data-table">
@@ -2265,6 +2265,28 @@ function copyTextToClipboard(text) {
   }
 }
 
+let printExpandedDetails = [];
+
+function expandDetailsForPrint() {
+  printExpandedDetails = [];
+  document.querySelectorAll('details.print-expand-details').forEach((el) => {
+    if (!el.open) {
+      el.open = true;
+      printExpandedDetails.push(el);
+    }
+  });
+}
+
+function restoreDetailsAfterPrint() {
+  printExpandedDetails.forEach((el) => {
+    el.open = false;
+  });
+  printExpandedDetails = [];
+}
+
+window.addEventListener('beforeprint', expandDetailsForPrint);
+window.addEventListener('afterprint', restoreDetailsAfterPrint);
+
 function handleExportPdf() {
   const isWeChat = /MicroMessenger/i.test(navigator.userAgent || '');
   const dialog = document.getElementById('pdf-guide-dialog');
@@ -2283,6 +2305,7 @@ function handleExportPdf() {
     return;
   }
   if (typeof window.print === 'function') {
+    expandDetailsForPrint();
     window.print();
   }
 }

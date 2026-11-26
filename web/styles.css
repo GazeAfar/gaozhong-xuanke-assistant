@@ -3319,7 +3319,8 @@ summary:focus:not(:focus-visible) {
   .rec-card,
   .reason-block,
   .ai-track-card,
-  .macro-card {
+  .macro-card,
+  .metric-explain-box {
     break-inside: avoid;
     page-break-inside: avoid;
   }
@@ -3330,12 +3331,10 @@ summary:focus:not(:focus-visible) {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
-  .core-profile-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  }
-
+  .core-profile-grid,
+  .total-overview-grid,
   .profile-grid {
-    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
 
   .data-table {
