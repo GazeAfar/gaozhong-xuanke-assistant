@@ -48,6 +48,7 @@ const state = {
 
 function switchView(targetId, { scrollTop = true } = {}) {
   const inputEl = document.getElementById('section-input');
+  const provinceGuideEl = document.getElementById('province-guide-section');
   const reportEl = document.getElementById('report-root');
   const explorerEl = document.getElementById('major-explorer');
   const hasReport = Boolean(state.lastReportData);
@@ -76,6 +77,7 @@ function switchView(targetId, { scrollTop = true } = {}) {
   }
 
   inputEl?.classList.toggle('hidden', targetId !== 'section-input');
+  provinceGuideEl?.classList.toggle('hidden', targetId !== 'section-input');
   explorerEl?.classList.toggle('hidden', targetId !== 'major-explorer');
 
   if (reportEl) {
