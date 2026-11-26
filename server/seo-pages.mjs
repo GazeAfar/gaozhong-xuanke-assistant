@@ -258,6 +258,111 @@ function renderJiangsuHubPage(store) {
   });
 }
 
+function renderJiangsuFufenzhiPage() {
+  const title = '江苏省高考等级赋分制详解（3+1+2五等级比例、换算公式与实例）- 高中选科助手';
+  const description =
+    '专为江苏高一学生与家长整理的江苏省 3+1+2 等级赋分制详解：完整介绍化学、生物、政治、地理五等级（A/B/C/D/E）比例、100~30 分赋分区间、等比例转换计算公式及真题举例。';
+  const keywords = '江苏等级赋分制,江苏赋分制怎么算,江苏3+1+2赋分对照表,江苏高考赋分公式,江苏高一选科';
+
+  const bodyHtml = `
+    <article class="doc-sheet report-doc">
+      <div class="report-header-card">
+        <div class="report-header-top">
+          <div>
+            <p class="hint" style="margin-bottom:6px;"><a href="/" style="color:var(--muted);text-decoration:none;">首页</a> / <a href="/jiangsu" style="color:var(--muted);text-decoration:none;">江苏选科分析</a> / 江苏等级赋分制详解</p>
+            <h2 class="report-title">江苏省高考「等级赋分制」详解与换算实例</h2>
+            <p class="hint">面向江苏高一学生与家长的大白话指南 · 搞懂化学、生物、政治、地理最终得分怎么来</p>
+          </div>
+          <a href="/jiangsu" class="btn btn-primary" style="text-decoration:none;">去江苏选科分析测算 →</a>
+        </div>
+      </div>
+
+      <section class="doc-section">
+        <h3 class="doc-h3">一、江苏高考 750 分里，哪些科目要赋分？</h3>
+        <ul class="policy-list">
+          <li><strong>不赋分（550 分 · 考多少算多少）</strong>：语文（150）、数学（150）、外语（150）以及首选科目「物理」或「历史」（100），全部直接按卷面原始分计入总分。</li>
+          <li><strong>必须赋分（200 分 · 按全省排名折算）</strong>：在<strong>化学、生物学、思想政治、地理</strong> 4 门中选考的 2 门（每门满分 100 分），不按卷面分直接相加，而是按全省选考同一科目的考生排名进行五等级赋分。</li>
+        </ul>
+      </section>
+
+      <section class="doc-section">
+        <h3 class="doc-h3">二、江苏省五等级人数比例与赋分区间表</h3>
+        <div class="table-wrap">
+          <table class="data-table grade-table">
+            <thead>
+              <tr>
+                <th>等级</th>
+                <th>A 等级</th>
+                <th>B 等级</th>
+                <th>C 等级</th>
+                <th>D 等级</th>
+                <th>E 等级</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>全省排名比例</strong></td>
+                <td>前 15%</td>
+                <td>15% ~ 50%</td>
+                <td>50% ~ 85%</td>
+                <td>85% ~ 98%</td>
+                <td>后 2%</td>
+              </tr>
+              <tr>
+                <td><strong>转换赋分区间(分)</strong></td>
+                <td><strong>100 ~ 86</strong></td>
+                <td>85 ~ 71</td>
+                <td>70 ~ 56</td>
+                <td>55 ~ 41</td>
+                <td>40 ~ 30</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h3 class="doc-h3">三、江苏赋分是怎么一步步算出来的？（附真实例子）</h3>
+        <p class="policy-desc" style="margin-bottom:12px;">
+          江苏省采用<strong>等比例转换公式</strong>：先把全省同科考生的原始分按比例划进 A~E 五个等级，再根据孩子原始分在本等级里的相对位置，按比例映射到对应的赋分区间（四舍五入取整）。
+        </p>
+        <div class="policy-card policy-card-main">
+          <h3>举个江苏家长一看就懂的例子</h3>
+          <p class="policy-desc">
+            假设某年江苏高考<strong>化学</strong>试卷偏难，全省选化学的考生中，前 15%（A 等级）的卷面原始分落在 <strong>74 分 ~ 96 分</strong>之间。孩子卷面考了 <strong>80 分</strong>（落在 A 等级内）：<br/>
+            按照等比例公式换算：<code>(96 - 80) ÷ (80 - 74) = (100 - 最终赋分) ÷ (最终赋分 - 86)</code>，算出来最终高考化学得分约 <strong>90 分</strong>（比卷面还高了 10 分！）。<br/>
+            反之，如果某门选考卷子特别简单，大家普遍考 90 分，卷面 85 分可能只排在 B 等级，赋分后反而会比卷面略低。
+          </p>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h3 class="doc-h3">四、给江苏高一选科的 2 条实用建议</h3>
+        <ul class="policy-list">
+          <li><strong>看排名比看卷面分更靠谱</strong>：因为赋分看的是相对位次，在 <a href="/jiangsu" style="color:var(--primary-ink);font-weight:600;">江苏选科分析</a> 中录入孩子多次月考/期中期末的「班级排名 / 年级排名」，比只填分数更能反映真实赋分潜力。</li>
+          <li><strong>兼顾专业覆盖率</strong>：如果孩子物理、化学排名稳健，优先保留「物理+化学」可覆盖江苏 95% 以上本科专业；也可查看 <a href="/fufenzhi" style="color:var(--primary-ink);font-weight:600;">全国各省赋分制对比</a> 了解更多模式差异。</li>
+        </ul>
+      </section>
+    </article>
+  `;
+
+  return renderLayout({
+    title,
+    description,
+    keywords,
+    canonicalPath: '/jiangsu/fufenzhi',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: title,
+      description,
+      inLanguage: 'zh-CN',
+      publisher: { '@type': 'Organization', name: '高中选科助手' },
+    },
+    bodyHtml,
+  });
+}
+
 function renderFufenzhiPage() {
   const title = '新高考等级赋分制怎么算？全国3+1+2五等级与3+3各省赋分对照表详解 - 高中选科助手';
   const description =
@@ -759,6 +864,9 @@ export function renderSeoPage(urlPath, store) {
   if (cleanPath === '/contact') {
     return renderContactPage();
   }
+  if (cleanPath === '/jiangsu/fufenzhi') {
+    return renderJiangsuFufenzhiPage();
+  }
   if (cleanPath.startsWith('/jiangsu/')) {
     const slug = cleanPath.slice('/jiangsu/'.length);
     const meta = COMBO_BY_SLUG.get(slug);
@@ -775,6 +883,7 @@ export function renderSitemapXml(siteOrigin = DEFAULT_SITE_ORIGIN) {
     { loc: '/', priority: '1.0', freq: 'weekly' },
     { loc: '/modes', priority: '0.9', freq: 'monthly' },
     { loc: '/jiangsu', priority: '0.9', freq: 'weekly' },
+    { loc: '/jiangsu/fufenzhi', priority: '0.85', freq: 'monthly' },
     { loc: '/fufenzhi', priority: '0.8', freq: 'monthly' },
     ...COMBO_SEO_META.map((m) => ({ loc: `/jiangsu/${m.slug}`, priority: '0.8', freq: 'monthly' })),
     { loc: '/privacy', priority: '0.5', freq: 'yearly' },

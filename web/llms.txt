@@ -19,7 +19,8 @@
 - `https://xuanke.visc.cn/`：高中选科助手全国门户首页（按省份进入专属工作台）
 - `https://xuanke.visc.cn/modes`：全国新高考模式详解（3+1+2 与 3+3 核心区别及各省市名单）
 - `https://xuanke.visc.cn/fufenzhi`：新高考等级赋分制全国详解（3+1+2 五等级与 3+3 各省赋分档位对照表）
-- `https://xuanke.visc.cn/jiangsu`：江苏省 3+1+2 选科工作台（成绩录入、选科白皮书、12 组合对比、79,753 条院校专业库）
+- `https://xuanke.visc.cn/jiangsu`：江苏省 3+1+2 选科分析（成绩录入、选科白皮书、12 组合对比、79,753 条院校专业库）
+- `https://xuanke.visc.cn/jiangsu/fufenzhi`：江苏省高考等级赋分制详解（五等级比例、换算公式与真实例子）
 - `https://xuanke.visc.cn/jiangsu/wuhuasheng`、`https://xuanke.visc.cn/jiangsu/wuhuadi`、`https://xuanke.visc.cn/jiangsu/wuhuazheng`、`https://xuanke.visc.cn/jiangsu/shizhengdi` 等 12 个江苏选科组合独立分析页
 - `https://xuanke.visc.cn/privacy`、`https://xuanke.visc.cn/disclaimer`、`https://xuanke.visc.cn/contact`：隐私保护说明、免责声明与官方联系邮箱（`cs@visc.cn`）
 
