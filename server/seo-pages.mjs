@@ -571,7 +571,7 @@ function renderModesPage() {
       <section class="doc-section">
         <h3 class="doc-h3">三、新高考选科与大学专业报考的关系</h3>
         <p class="policy-desc">
-          教育部与各省高校目前普遍执行新版选考科目要求：绝大多数<strong>理学、工学、农学、医学</strong>核心本科专业要求「物理 + 化学」均须选考；部分政法、公安及马克思主义理论类专业要求必选「思想政治」。想进一步了解等级赋分如何换算，可阅读 <a href="/fufenzhi" style="color:var(--primary-ink);font-weight:600;">《新高考等级赋分制详解》</a>，或直接前往 <a href="/jiangsu" style="color:var(--primary-ink);font-weight:600;">江苏选科工作台</a> 体验实时测算。
+          教育部与各省高校目前普遍执行新版选考科目要求：绝大多数<strong>理学、工学、农学、医学</strong>核心本科专业要求「物理 + 化学」均须选考；部分政法、公安及马克思主义理论类专业要求必选「思想政治」。想进一步了解等级赋分如何换算，可阅读 <a href="/fufenzhi" style="color:var(--primary-ink);font-weight:600;">《新高考等级赋分制详解》</a>，或直接前往 <a href="/jiangsu" style="color:var(--primary-ink);font-weight:600;">江苏选科分析</a> 体验实时测算。
         </p>
       </section>
     </article>
