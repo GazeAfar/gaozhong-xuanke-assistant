@@ -1255,8 +1255,9 @@ async function generateReport() {
     }
     renderReport(json.data);
     switchView('report-root');
-  } catch {
-    showError('无法连接后端服务，请确认服务已启动');
+  } catch (err) {
+    console.error('[generateReport]', err);
+    showError('网络开小差了或页面加载异常，请刷新页面后重试');
   } finally {
     btn.disabled = false;
     btn.textContent = '生成选科与就业白皮书';
@@ -1509,6 +1510,18 @@ function bindEvents() {
   });
   document.getElementById('btn-load-more-majors').addEventListener('click', () => searchMajors(true));
 
+  // 页脚快捷导航
+  document.querySelectorAll('[data-footer-nav]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-footer-nav');
+      if (targetId) switchView(targetId);
+    });
+  });
+
+  initMobileSelectSheet();
+  initPdfGuideModal();
+}
+
 function buildReportTextSummary() {
   const report = state.lastReportData?.report;
   if (!report) return '';
@@ -1661,18 +1674,6 @@ function initMobileSelectSheet() {
     }
     closeSheet();
   });
-}
-
-  // 页脚快捷导航
-  document.querySelectorAll('[data-footer-nav]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const targetId = btn.getAttribute('data-footer-nav');
-      if (targetId) switchView(targetId);
-    });
-  });
-
-  initMobileSelectSheet();
-  initPdfGuideModal();
 }
 
 initApp();
