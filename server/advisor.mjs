@@ -182,7 +182,7 @@ function round1(n) {
  * 根据孩子多次月考/期中/期末成绩与排名，计算六科画像与 12 组合选科建议。
  */
 export function evaluateExamsForJiangsu(payload, comboMajorStats) {
-  const examYear = Number(payload.examYear) || 2027;
+  const examYear = Number(payload.examYear) || 2029;
   const gradYear = examYear + 4;
   const studentName = String(payload.studentName || '').trim().slice(0, 20);
   const exams = Array.isArray(payload.exams) ? payload.exams : [];
@@ -215,7 +215,7 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
       if (rec.score !== '' && rec.score !== null && rec.score !== undefined && !Number.isNaN(Number(rec.score))) {
         const s = Number(rec.score);
         if (s >= 0 && s <= fullScore) {
-          scorePoints.push({ raw: s, norm100: (s / fullScore) * 100, weight });
+          scorePoints.push({ raw: s, norm100: (s / fullScore) * 100, weight, examIndex: idx + 1 });
         }
       }
 
@@ -223,7 +223,8 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
       if (rawClassRank !== '' && rawClassRank !== null && rawClassRank !== undefined && !Number.isNaN(Number(rawClassRank))) {
         const r = Number(rawClassRank);
         if (r >= 1) {
-          classRankPoints.push({ rank: r, weight });
+          const topPct = classSize && r <= classSize ? round1((r / classSize) * 100) : null;
+          classRankPoints.push({ rank: r, weight, examIndex: idx + 1, topPct });
           if (classSize && r <= classSize) {
             classPctPoints.push({ topPct: (r / classSize) * 100, weight });
           }
@@ -234,7 +235,8 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
       if (rawGradeRank !== '' && rawGradeRank !== null && rawGradeRank !== undefined && !Number.isNaN(Number(rawGradeRank))) {
         const r = Number(rawGradeRank);
         if (r >= 1) {
-          gradeRankPoints.push({ rank: r, weight });
+          const topPct = gradeSize && r <= gradeSize ? round1((r / gradeSize) * 100) : null;
+          gradeRankPoints.push({ rank: r, weight, examIndex: idx + 1, topPct });
           if (gradeSize && r <= gradeSize) {
             gradePctPoints.push({ topPct: (r / gradeSize) * 100, weight });
           }
@@ -275,20 +277,25 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
           )
         : null;
 
+    const latestClassPoint = classRankPoints.length > 0 ? classRankPoints[classRankPoints.length - 1] : null;
+    const latestGradePoint = gradeRankPoints.length > 0 ? gradeRankPoints[gradeRankPoints.length - 1] : null;
+
     return {
       code,
       name: CORE_SUBJECT_LABELS[code],
       fullScore: 150,
       avgScore,
       latestScore,
-      latestClassRank: classRankPoints.length > 0 ? classRankPoints[classRankPoints.length - 1].rank : null,
-      latestGradeRank: gradeRankPoints.length > 0 ? gradeRankPoints[gradeRankPoints.length - 1].rank : null,
-      latestRank:
-        gradeRankPoints.length > 0
-          ? gradeRankPoints[gradeRankPoints.length - 1].rank
-          : classRankPoints.length > 0
-          ? classRankPoints[classRankPoints.length - 1].rank
-          : null,
+      scoreHistory: scorePoints.map((p) => ({ examIndex: p.examIndex, score: p.raw })),
+      classRankCount: classRankPoints.length,
+      gradeRankCount: gradeRankPoints.length,
+      latestClassRank: latestClassPoint ? latestClassPoint.rank : null,
+      latestClassRankExamIndex: latestClassPoint ? latestClassPoint.examIndex : null,
+      latestClassTopPct: latestClassPoint ? latestClassPoint.topPct : null,
+      latestGradeRank: latestGradePoint ? latestGradePoint.rank : null,
+      latestGradeRankExamIndex: latestGradePoint ? latestGradePoint.examIndex : null,
+      latestGradeTopPct: latestGradePoint ? latestGradePoint.topPct : null,
+      latestRank: latestGradePoint ? latestGradePoint.rank : latestClassPoint ? latestClassPoint.rank : null,
       avgClassTopPct,
       avgGradeTopPct,
       avgTopPct: avgGradeTopPct ?? avgClassTopPct,
@@ -357,7 +364,7 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
     ) {
       const ts = Number(ex.totalScore);
       if (ts >= 0 && ts <= 1500) {
-        totalScorePoints.push({ raw: ts, weight, examName: ex.name || `第${idx + 1}次考试` });
+        totalScorePoints.push({ raw: ts, weight, examIndex: idx + 1, examName: ex.name || `第${idx + 1}次考试` });
       }
     }
 
@@ -369,7 +376,8 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
     ) {
       const r = Number(ex.totalClassRank);
       if (r >= 1) {
-        totalClassRankPoints.push({ rank: r, weight });
+        const topPct = classSize && r <= classSize ? round1((r / classSize) * 100) : null;
+        totalClassRankPoints.push({ rank: r, weight, examIndex: idx + 1, topPct });
         if (classSize && r <= classSize) {
           totalClassPctPoints.push({ topPct: (r / classSize) * 100, weight });
         }
@@ -384,7 +392,8 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
     ) {
       const r = Number(ex.totalGradeRank);
       if (r >= 1) {
-        totalGradeRankPoints.push({ rank: r, weight });
+        const topPct = gradeSize && r <= gradeSize ? round1((r / gradeSize) * 100) : null;
+        totalGradeRankPoints.push({ rank: r, weight, examIndex: idx + 1, topPct });
         if (gradeSize && r <= gradeSize) {
           totalGradePctPoints.push({ topPct: (r / gradeSize) * 100, weight });
         }
@@ -409,6 +418,11 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
     }
   }
 
+  const latestTotalClassPoint =
+    totalClassRankPoints.length > 0 ? totalClassRankPoints[totalClassRankPoints.length - 1] : null;
+  const latestTotalGradePoint =
+    totalGradeRankPoints.length > 0 ? totalGradeRankPoints[totalGradeRankPoints.length - 1] : null;
+
   const examTotalProfile = {
     hasData:
       totalScorePoints.length > 0 ||
@@ -416,14 +430,15 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
       totalGradeRankPoints.length > 0,
     avgScore: totalAvgScore,
     latestScore: totalLatestScore,
-    latestClassRank:
-      totalClassRankPoints.length > 0
-        ? totalClassRankPoints[totalClassRankPoints.length - 1].rank
-        : null,
-    latestGradeRank:
-      totalGradeRankPoints.length > 0
-        ? totalGradeRankPoints[totalGradeRankPoints.length - 1].rank
-        : null,
+    scoreHistory: totalScorePoints.map((p) => ({ examIndex: p.examIndex, score: p.raw })),
+    classRankCount: totalClassRankPoints.length,
+    gradeRankCount: totalGradeRankPoints.length,
+    latestClassRank: latestTotalClassPoint ? latestTotalClassPoint.rank : null,
+    latestClassRankExamIndex: latestTotalClassPoint ? latestTotalClassPoint.examIndex : null,
+    latestClassTopPct: latestTotalClassPoint ? latestTotalClassPoint.topPct : null,
+    latestGradeRank: latestTotalGradePoint ? latestTotalGradePoint.rank : null,
+    latestGradeRankExamIndex: latestTotalGradePoint ? latestTotalGradePoint.examIndex : null,
+    latestGradeTopPct: latestTotalGradePoint ? latestTotalGradePoint.topPct : null,
     avgClassTopPct:
       totalClassPctPoints.length > 0
         ? round1(
@@ -468,7 +483,7 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
       if (rec.score !== '' && rec.score !== null && rec.score !== undefined && !Number.isNaN(Number(rec.score))) {
         const s = Number(rec.score);
         if (s >= 0 && s <= fullScore) {
-          scorePoints.push({ raw: s, norm100: (s / fullScore) * 100, weight, examName: ex.name || `第${idx + 1}次考试` });
+          scorePoints.push({ raw: s, norm100: (s / fullScore) * 100, weight, examIndex: idx + 1, examName: ex.name || `第${idx + 1}次考试` });
         }
       }
 
@@ -476,11 +491,11 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
       if (rawClassRank !== '' && rawClassRank !== null && rawClassRank !== undefined && !Number.isNaN(Number(rawClassRank))) {
         const r = Number(rawClassRank);
         if (r >= 1) {
-          classRankPoints.push({ rank: r, weight });
+          const topPct = classSize && r <= classSize ? round1((r / classSize) * 100) : null;
+          classRankPoints.push({ rank: r, weight, examIndex: idx + 1, topPct });
           if (classSize && r <= classSize) {
-            const topPct = (r / classSize) * 100;
             const pctScore = Math.max(0, Math.min(100, (1 - (r - 1) / classSize) * 100));
-            classPctPoints.push({ topPct, pctScore, weight });
+            classPctPoints.push({ topPct: (r / classSize) * 100, pctScore, weight });
           }
         }
       }
@@ -489,11 +504,11 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
       if (rawGradeRank !== '' && rawGradeRank !== null && rawGradeRank !== undefined && !Number.isNaN(Number(rawGradeRank))) {
         const r = Number(rawGradeRank);
         if (r >= 1) {
-          gradeRankPoints.push({ rank: r, weight });
+          const topPct = gradeSize && r <= gradeSize ? round1((r / gradeSize) * 100) : null;
+          gradeRankPoints.push({ rank: r, weight, examIndex: idx + 1, topPct });
           if (gradeSize && r <= gradeSize) {
-            const topPct = (r / gradeSize) * 100;
             const pctScore = Math.max(0, Math.min(100, (1 - (r - 1) / gradeSize) * 100));
-            gradePctPoints.push({ topPct, pctScore, weight });
+            gradePctPoints.push({ topPct: (r / gradeSize) * 100, pctScore, weight });
           }
         }
       }
@@ -544,8 +559,10 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
       avgGradeRankScore = round1(gradePctPoints.reduce((acc, p) => acc + p.pctScore * p.weight, 0) / wSum);
     }
 
-    const latestClassRank = classRankPoints.length > 0 ? classRankPoints[classRankPoints.length - 1].rank : null;
-    const latestGradeRank = gradeRankPoints.length > 0 ? gradeRankPoints[gradeRankPoints.length - 1].rank : null;
+    const latestClassPoint = classRankPoints.length > 0 ? classRankPoints[classRankPoints.length - 1] : null;
+    const latestGradePoint = gradeRankPoints.length > 0 ? gradeRankPoints[gradeRankPoints.length - 1] : null;
+    const latestClassRank = latestClassPoint ? latestClassPoint.rank : null;
+    const latestGradeRank = latestGradePoint ? latestGradePoint.rank : null;
 
     // 优先使用年级百分位（最贴近全省赋分），无年排时使用班级百分位
     const effectiveRankScore = avgGradeRankScore ?? avgClassRankScore;
@@ -570,8 +587,15 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
       examCount: Math.max(scorePoints.length, classRankPoints.length, gradeRankPoints.length),
       avgScore,
       latestScore,
+      scoreHistory: scorePoints.map((p) => ({ examIndex: p.examIndex, score: p.raw })),
+      classRankCount: classRankPoints.length,
+      gradeRankCount: gradeRankPoints.length,
       latestClassRank,
+      latestClassRankExamIndex: latestClassPoint ? latestClassPoint.examIndex : null,
+      latestClassTopPct: latestClassPoint ? latestClassPoint.topPct : null,
       latestGradeRank,
+      latestGradeRankExamIndex: latestGradePoint ? latestGradePoint.examIndex : null,
+      latestGradeTopPct: latestGradePoint ? latestGradePoint.topPct : null,
       latestRank: latestGradeRank ?? latestClassRank,
       avgClassTopPct,
       avgGradeTopPct,
@@ -612,11 +636,25 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
     for (const p of profiles) {
       if (!p.hasData) continue;
       const parts = [];
-      if (p.avgScore !== null) parts.push(`加权均分 ${p.avgScore}`);
-      if (p.avgGradeTopPct !== null) parts.push(`年排前 ${p.avgGradeTopPct}%`);
-      else if (p.latestGradeRank !== null) parts.push(`年排第 ${p.latestGradeRank} 名`);
-      if (p.avgClassTopPct !== null) parts.push(`班排前 ${p.avgClassTopPct}%`);
-      else if (p.latestClassRank !== null) parts.push(`班排第 ${p.latestClassRank} 名`);
+      if (p.avgScore !== null) {
+        if (p.scoreHistory && p.scoreHistory.length >= 2) {
+          parts.push(`加权均分 ${p.avgScore}（历次 ${p.scoreHistory.map((h) => h.score).join(' → ')}）`);
+        } else {
+          parts.push(`成绩 ${p.avgScore}`);
+        }
+      }
+      if (p.gradeRankCount >= 2 && p.avgGradeTopPct !== null) {
+        parts.push(`年排均位前 ${p.avgGradeTopPct}%（最近第 ${p.latestGradeRank} 名）`);
+      } else if (p.latestGradeRank !== null) {
+        const suffix = exams.length > 1 && p.gradeRankCount < exams.length ? `，仅第 ${p.latestGradeRankExamIndex} 次录入` : '';
+        parts.push(`年排第 ${p.latestGradeRank} 名${p.latestGradeTopPct !== null ? `（前 ${p.latestGradeTopPct}%${suffix}）` : suffix ? `（${suffix.slice(1)}）` : ''}`);
+      }
+      if (p.classRankCount >= 2 && p.avgClassTopPct !== null) {
+        parts.push(`班排均位前 ${p.avgClassTopPct}%（最近第 ${p.latestClassRank} 名）`);
+      } else if (p.latestClassRank !== null) {
+        const suffix = exams.length > 1 && p.classRankCount < exams.length ? `，仅第 ${p.latestClassRankExamIndex} 次录入` : '';
+        parts.push(`班排第 ${p.latestClassRank} 名${p.latestClassTopPct !== null ? `（前 ${p.latestClassTopPct}%${suffix}）` : suffix ? `（${suffix.slice(1)}）` : ''}`);
+      }
       if (p.trend && p.trend !== '单次参考' && p.trend !== '数据不足') parts.push(p.trend);
       scoreReasons.push(`${p.name}：${parts.join('，')}`);
     }

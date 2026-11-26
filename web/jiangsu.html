@@ -32,7 +32,7 @@
     content="基于官方高校专业选科目录与学生多次成绩排名，免费生成高中选科与就业分析白皮书。"
   />
   <link rel="icon" type="image/jpeg" href="/logo.jpg?v=2" />
-  <link rel="stylesheet" href="/styles.css?v=61" />
+  <link rel="stylesheet" href="/styles.css?v=62" />
   <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-K9LT3P6G"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -180,11 +180,6 @@
           <h2>成绩录入</h2>
           <p class="hint">填写 1 次或多次月考/期中期末成绩，系统将结合官方高校选科目录生成专属选科与就业白皮书</p>
         </div>
-        <div class="header-tools">
-          <button type="button" class="btn btn-secondary hidden" id="btn-restore-snapshot">恢复暂存</button>
-          <button type="button" class="btn btn-ghost" id="btn-fill-sample">填入示例</button>
-          <button type="button" class="btn btn-danger-text" id="btn-clear-all">清空</button>
-        </div>
       </div>
 
       <div class="meta-grid">
@@ -199,10 +194,10 @@
         <label class="field">
           <span class="field-label">高考年份</span>
           <select id="exam-year">
-            <option value="2027">2027年高考（2031年毕业）</option>
-            <option value="2028">2028年高考（2032年毕业）</option>
-            <option value="2029">2029年高考（2033年毕业）</option>
-            <option value="2030">2030年高考（2034年毕业）</option>
+            <option value="2029" selected>2029年高考 · 当前高一（2033年毕业）</option>
+            <option value="2030">2030年高考 · 当前初三（2034年毕业）</option>
+            <option value="2031">2031年高考 · 当前初二（2035年毕业）</option>
+            <option value="2032">2032年高考 · 当前初一（2036年毕业）</option>
           </select>
         </label>
 
@@ -228,8 +223,12 @@
       <div class="submit-bar">
         <span id="save-status" class="save-status" aria-live="polite"></span>
         <div class="submit-actions">
-          <button type="button" class="btn btn-secondary" id="btn-save-draft">暂存成绩</button>
           <button type="button" class="btn btn-primary btn-lg" id="btn-generate">生成选科与就业白皮书</button>
+          <div class="submit-sub-actions">
+            <button type="button" class="btn btn-secondary" id="btn-save-draft">暂存成绩</button>
+            <button type="button" class="btn btn-secondary hidden" id="btn-restore-snapshot">恢复暂存</button>
+            <button type="button" class="btn btn-danger-text" id="btn-clear-all">清空全部</button>
+          </div>
         </div>
       </div>
     </section>
@@ -449,7 +448,7 @@
     </div>
   </dialog>
 
-  <script src="/app.js?v=39"></script>
+  <script src="/app.js?v=40"></script>
   <script>
     (function () {
       var btn = document.getElementById('btn-portal-nav-toggle');

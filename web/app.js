@@ -34,10 +34,28 @@ const REPORT_STORAGE_KEY = 'js_xuanke_web_report_v1';
 const VIEW_STORAGE_KEY = 'js_xuanke_web_view_v1';
 const VALID_VIEWS = new Set(['section-input', 'report-root', 'section-compare', 'major-explorer']);
 
+function getDynamicExamYearOptions() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth() + 1;
+  // 每年 9 月进入新学年：9-12 月当前高一对应 y+3 年高考；1-8 月当前高一对应 y+2 年高考
+  const baseYear = m >= 9 ? y + 3 : y + 2;
+  const labels = ['当前高一', '当前初三', '当前初二', '当前初一'];
+  return labels.map((gradeLabel, offset) => {
+    const examYear = baseYear + offset;
+    return {
+      year: examYear,
+      label: `${examYear}年高考 · ${gradeLabel}（${examYear + 4}年毕业）`,
+    };
+  });
+}
+
+const DEFAULT_EXAM_YEAR = getDynamicExamYearOptions()[0].year;
+
 const state = {
   province: 'JS',
   studentName: '',
-  examYear: 2027,
+  examYear: DEFAULT_EXAM_YEAR,
   exams: [],
   aiConfig: { baseUrl: '', model: '', apiKey: '' },
   lastReportData: null,
@@ -286,7 +304,9 @@ function restoreSnapshot() {
     return;
   }
   state.studentName = snap.studentName || '';
-  state.examYear = Number(snap.examYear) || 2027;
+  const validYears = new Set(getDynamicExamYearOptions().map((o) => o.year));
+  const snapYear = Number(snap.examYear);
+  state.examYear = validYears.has(snapYear) ? snapYear : DEFAULT_EXAM_YEAR;
   state.exams = JSON.parse(JSON.stringify(snap.exams));
 
   const nameInput = document.getElementById('student-name');
@@ -301,6 +321,13 @@ function restoreSnapshot() {
 }
 
 async function initApp() {
+  const yearSelect = document.getElementById('exam-year');
+  const yearOptions = getDynamicExamYearOptions();
+  if (yearSelect) {
+    yearSelect.innerHTML = yearOptions
+      .map((opt) => `<option value="${opt.year}">${escapeHtml(opt.label)}</option>`)
+      .join('');
+  }
   loadState();
   renderExams();
   bindEvents();
@@ -350,7 +377,9 @@ function loadState() {
     if (raw) {
       const parsed = JSON.parse(raw);
       state.studentName = parsed.studentName || '';
-      state.examYear = Number(parsed.examYear) || 2027;
+      const validYears = new Set(getDynamicExamYearOptions().map((o) => o.year));
+      const parsedYear = Number(parsed.examYear);
+      state.examYear = validYears.has(parsedYear) ? parsedYear : DEFAULT_EXAM_YEAR;
       state.exams = Array.isArray(parsed.exams) && parsed.exams.length > 0 ? parsed.exams : [createEmptyExam(0)];
       state.aiConfig = parsed.aiConfig || { baseUrl: '', model: '', apiKey: '' };
       return;
@@ -614,26 +643,76 @@ function formatChinaSpecialHtml(text) {
   return escapeHtml(text || '').replace('【国内特色去向】', '<strong>🏛 </strong>');
 }
 
-function renderRankLines(p) {
+function renderScoreHistoryLine(p) {
+  const history = Array.isArray(p?.scoreHistory) ? p.scoreHistory : [];
+  if (history.length >= 2) {
+    const seq = history.map((h) => escapeHtml(h.score)).join(' → ');
+    return `<div class="profile-history">历次：${seq}</div>`;
+  }
+  return '';
+}
+
+function renderScoreTag(p) {
+  const count = Array.isArray(p?.scoreHistory) ? p.scoreHistory.length : 0;
+  if (count >= 2) return `<span class="profile-score-label">${count}次加权均分</span>`;
+  if (count === 1) return `<span class="profile-score-label">本次成绩</span>`;
+  return '';
+}
+
+function renderRankLines(p, totalExamCount = 1) {
   const lines = [];
-  if (p.avgClassTopPct !== null) {
+  const classCount = Number(p.classRankCount || 0);
+  const gradeCount = Number(p.gradeRankCount || 0);
+
+  if (classCount >= 2) {
+    if (p.avgClassTopPct !== null) {
+      lines.push(
+        `班排均位：前 <strong>${p.avgClassTopPct}%</strong> · 最近第 ${p.latestClassRank} 名`
+      );
+    } else if (p.latestClassRank !== null) {
+      lines.push(`班排最近：第 <strong>${p.latestClassRank}</strong> 名`);
+    }
+  } else if (classCount === 1 && p.latestClassRank !== null) {
+    const pctText = p.latestClassTopPct !== null ? `（前 ${p.latestClassTopPct}%）` : '';
+    const srcNote =
+      totalExamCount > 1 && p.latestClassRankExamIndex
+        ? ` <span class="rank-source-note">· 仅第 ${p.latestClassRankExamIndex} 次录入</span>`
+        : '';
+    lines.push(`班排：第 <strong>${p.latestClassRank}</strong> 名${pctText}${srcNote}`);
+  } else if (p.avgClassTopPct !== null || p.latestClassRank !== null) {
+    // 兼容旧缓存数据
     lines.push(
-      `班级排名：前 <strong>${p.avgClassTopPct}%</strong>${p.latestClassRank !== null ? `（第 ${p.latestClassRank} 名）` : ''}`
+      p.avgClassTopPct !== null
+        ? `班排均位：前 <strong>${p.avgClassTopPct}%</strong>`
+        : `班排：第 <strong>${p.latestClassRank}</strong> 名`
     );
-  } else if (p.latestClassRank !== null) {
-    lines.push(`班级排名：第 <strong>${p.latestClassRank}</strong> 名`);
   }
 
-  if (p.avgGradeTopPct !== null) {
+  if (gradeCount >= 2) {
+    if (p.avgGradeTopPct !== null) {
+      lines.push(
+        `年排均位：前 <strong>${p.avgGradeTopPct}%</strong> · 最近第 ${p.latestGradeRank} 名`
+      );
+    } else if (p.latestGradeRank !== null) {
+      lines.push(`年排最近：第 <strong>${p.latestGradeRank}</strong> 名`);
+    }
+  } else if (gradeCount === 1 && p.latestGradeRank !== null) {
+    const pctText = p.latestGradeTopPct !== null ? `（前 ${p.latestGradeTopPct}%）` : '';
+    const srcNote =
+      totalExamCount > 1 && p.latestGradeRankExamIndex
+        ? ` <span class="rank-source-note">· 仅第 ${p.latestGradeRankExamIndex} 次录入</span>`
+        : '';
+    lines.push(`年排：第 <strong>${p.latestGradeRank}</strong> 名${pctText}${srcNote}`);
+  } else if (p.avgGradeTopPct !== null || p.latestGradeRank !== null) {
     lines.push(
-      `年级排名：前 <strong>${p.avgGradeTopPct}%</strong>${p.latestGradeRank !== null ? `（第 ${p.latestGradeRank} 名）` : ''}`
+      p.avgGradeTopPct !== null
+        ? `年排均位：前 <strong>${p.avgGradeTopPct}%</strong>`
+        : `年排：第 <strong>${p.latestGradeRank}</strong> 名`
     );
-  } else if (p.latestGradeRank !== null) {
-    lines.push(`年级排名：第 <strong>${p.latestGradeRank}</strong> 名`);
   }
 
   if (lines.length === 0) {
-    return '<div class="profile-val">排名：未录入</div>';
+    return '';
   }
   return lines.map((l) => `<div class="profile-val">${l}</div>`).join('');
 }
@@ -661,7 +740,7 @@ function renderReport(data) {
       const isStrong = p.avgScore !== null && p.avgScore >= 80;
       const scoreBlock =
         p.avgScore !== null
-          ? `<div class="profile-score-big">${p.avgScore} <small>分</small></div>`
+          ? `<div class="profile-score-big">${p.avgScore} <small>分</small>${renderScoreTag(p)}</div>`
           : `<div class="profile-score-big" style="color:var(--muted);">未录入</div>`;
       return `
         <div class="profile-item ${isStrong ? 'profile-item-strong' : ''}">
@@ -670,7 +749,8 @@ function renderReport(data) {
             ${renderTrendBadge(p.trend)}
           </div>
           ${scoreBlock}
-          ${renderRankLines(p)}
+          ${renderScoreHistoryLine(p)}
+          ${renderRankLines(p, report.examCount)}
         </div>
       `;
     })
@@ -853,33 +933,57 @@ function renderReport(data) {
     .join('；');
 
   const examTotal = report.examTotalProfile;
+  const renderTotalRankDetail = (count, avgPct, latestPct, latestRank, examIdx, labelPrefix) => {
+    if (count >= 2) {
+      return avgPct !== null
+        ? `<div class="profile-val">${labelPrefix}均位：前 <strong>${avgPct}%</strong></div>`
+        : '';
+    }
+    if (count === 1 && latestRank !== null) {
+      const pct = latestPct !== null ? `前 <strong>${latestPct}%</strong>` : '';
+      const src = report.examCount > 1 && examIdx ? `仅第 ${examIdx} 次录入` : '';
+      const joined = [pct, src].filter(Boolean).join(' · ');
+      return joined ? `<div class="profile-val">${joined}</div>` : '';
+    }
+    return '';
+  };
+
   const examTotalSectionHtml = examTotal?.hasData
     ? `
     <section class="doc-section">
-      <h3 class="doc-h3">考试总分与排名概况</h3>
+      <h3 class="doc-h3" style="margin-bottom:4px;">考试总分与排名概况</h3>
+      <p class="hint" style="margin-bottom:14px;">总分按历次考试时间加权计算（越近权重越高）；总排名为选填项，仅按已录入场次统计。</p>
       <div class="total-overview-grid">
         <div class="profile-item profile-item-strong">
           <div class="profile-head">
-            <span class="profile-subj">加权总分</span>
+            <span class="profile-subj">${(examTotal.scoreHistory?.length || 0) >= 2 ? '加权总分' : '本次总分'}</span>
             ${renderTrendBadge(examTotal.trend)}
           </div>
           <div class="profile-score-big">${examTotal.avgScore !== null ? `${examTotal.avgScore} <small>分</small>` : '<span style="color:var(--muted);">未录入</span>'}</div>
-          ${examTotal.latestScore !== null ? `<div class="profile-val">最近一次：<strong>${examTotal.latestScore}</strong> 分</div>` : ''}
+          ${renderScoreHistoryLine(examTotal)}
         </div>
-        <div class="profile-item">
+        ${
+          examTotal.latestClassRank !== null
+            ? `<div class="profile-item">
           <div class="profile-head">
             <span class="profile-subj">总分班级排名</span>
           </div>
-          <div class="profile-score-big" style="color:var(--info);">${examTotal.latestClassRank !== null ? `第 ${examTotal.latestClassRank} <small>名</small>` : '<span style="color:var(--muted);">未录入</span>'}</div>
-          ${examTotal.avgClassTopPct !== null ? `<div class="profile-val">班排位置：前 <strong>${examTotal.avgClassTopPct}%</strong></div>` : '<div class="profile-val">填写班级人数后可换算百分位</div>'}
-        </div>
-        <div class="profile-item">
+          <div class="profile-score-big" style="color:var(--info);">第 ${examTotal.latestClassRank} <small>名</small></div>
+          ${renderTotalRankDetail(examTotal.classRankCount, examTotal.avgClassTopPct, examTotal.latestClassTopPct, examTotal.latestClassRank, examTotal.latestClassRankExamIndex, '班排')}
+        </div>`
+            : ''
+        }
+        ${
+          examTotal.latestGradeRank !== null
+            ? `<div class="profile-item">
           <div class="profile-head">
             <span class="profile-subj">总分年级排名</span>
           </div>
-          <div class="profile-score-big" style="color:var(--purple);">${examTotal.latestGradeRank !== null ? `第 ${examTotal.latestGradeRank} <small>名</small>` : '<span style="color:var(--muted);">未录入</span>'}</div>
-          ${examTotal.avgGradeTopPct !== null ? `<div class="profile-val">年排位置：前 <strong>${examTotal.avgGradeTopPct}%</strong></div>` : '<div class="profile-val">填写年级人数后可换算百分位</div>'}
-        </div>
+          <div class="profile-score-big" style="color:var(--purple);">第 ${examTotal.latestGradeRank} <small>名</small></div>
+          ${renderTotalRankDetail(examTotal.gradeRankCount, examTotal.avgGradeTopPct, examTotal.latestGradeTopPct, examTotal.latestGradeRank, examTotal.latestGradeRankExamIndex, '年排')}
+        </div>`
+            : ''
+        }
       </div>
     </section>
   `
@@ -889,13 +993,14 @@ function renderReport(data) {
   const coreSectionHtml = hasCoreData
     ? `
     <section class="card">
-      <h3 style="margin:0 0 12px;font-size:17px;">语数外成绩${report.coreTotalAvg !== null ? ` <span class="pill pill-teal" style="margin-left:8px;">总分 ${report.coreTotalAvg} / 450</span>` : ''}</h3>
+      <h3 style="margin:0 0 4px;font-size:17px;">语数外成绩${report.coreTotalAvg !== null ? ` <span class="pill pill-teal" style="margin-left:8px;">${report.examCount >= 2 ? '加权总分' : '总分'} ${report.coreTotalAvg} / 450</span>` : ''}</h3>
+      <p class="hint" style="margin-bottom:12px;">${report.examCount >= 2 ? '下方主科分数为多次考试加权均分（越近权重越高），并附历次得分轨迹；排名仅按已录入场次展示。' : '下方为本次录入的语数外主科成绩与排名。'}</p>
       <div class="core-profile-grid">
         ${report.coreProfiles
           .map((p) => {
             const scoreBlock =
               p.avgScore !== null
-                ? `<div class="profile-score-big" style="color:#0f766e;">${p.avgScore} <small>/ 150</small></div>`
+                ? `<div class="profile-score-big" style="color:#0f766e;">${p.avgScore} <small>/ 150</small>${renderScoreTag(p)}</div>`
                 : `<div class="profile-score-big" style="color:var(--muted);">未录入</div>`;
             return `
               <div class="profile-item profile-item-core">
@@ -904,7 +1009,8 @@ function renderReport(data) {
                   ${renderTrendBadge(p.trend)}
                 </div>
                 ${scoreBlock}
-                ${renderRankLines(p)}
+                ${renderScoreHistoryLine(p)}
+                ${renderRankLines(p, report.examCount)}
               </div>
             `;
           })
@@ -969,7 +1075,8 @@ function renderReport(data) {
       ${coreSectionHtml}
 
       <section class="doc-section">
-        <h3 class="doc-h3">六门选考成绩画像</h3>
+        <h3 class="doc-h3" style="margin-bottom:4px;">六门选考成绩画像</h3>
+        <p class="hint" style="margin-bottom:14px;">${report.examCount >= 2 ? '大字为历次考试时间加权均分（越近权重越高），下方附每次原始分轨迹；排名为选填项，仅按已录入场次统计。' : '下方为本次录入的六门选考科目成绩与排名。'}</p>
         <div class="profile-grid">${profilesHtml}</div>
       </section>
 
@@ -1300,78 +1407,7 @@ function bindEvents() {
 
   document.getElementById('btn-restore-snapshot')?.addEventListener('click', restoreSnapshot);
 
-  document.getElementById('btn-fill-sample').addEventListener('click', async () => {
-    const hasExistingData = hasAnyEnteredScore(state.exams) || state.studentName.trim() !== '';
-    if (hasExistingData) {
-      const confirmed = await openConfirmModal({
-        title: '填入示例成绩',
-        message: '当前表单已有填写的数据，填入示例将覆盖当前内容。覆盖前系统会自动为你暂存，可随时点击「恢复暂存」找回，是否继续？',
-        confirmText: '继续填入示例',
-        danger: false,
-      });
-      if (!confirmed) return;
-    }
-    // 填入示例前自动暂存当前真实成绩，防止误覆盖
-    const backedUp = !state.studentName.startsWith('演示同学') && saveSnapshot('auto');
-    state.studentName = '演示同学（请替换为真实成绩）';
-    nameInput.value = state.studentName;
-    state.exams = [
-      {
-        id: 'sample_1',
-        name: '高一上第一次月考',
-        type: '月考',
-        classSize: '47',
-        gradeSize: '600',
-        totalScore: '830.5',
-        totalClassRank: '9',
-        totalGradeRank: '88',
-        coreSubjects: {
-          CHINESE: { score: '112.5', classRank: '12', gradeRank: '110' },
-          MATH: { score: '126', classRank: '6', gradeRank: '58' },
-          ENGLISH: { score: '122', classRank: '8', gradeRank: '74' },
-        },
-        subjects: {
-          PHYSICS: { score: '84', classRank: '8', gradeRank: '72' },
-          HISTORY: { score: '71', classRank: '26', gradeRank: '290' },
-          CHEMISTRY: { score: '86', classRank: '6', gradeRank: '55' },
-          BIOLOGY: { score: '79', classRank: '14', gradeRank: '140' },
-          POLITICS: { score: '68', classRank: '30', gradeRank: '340' },
-          GEOGRAPHY: { score: '82', classRank: '10', gradeRank: '95' },
-        },
-      },
-      {
-        id: 'sample_2',
-        name: '高一上期末考试',
-        type: '期末考试',
-        classSize: '47',
-        gradeSize: '600',
-        totalScore: '851.5',
-        totalClassRank: '6',
-        totalGradeRank: '58',
-        coreSubjects: {
-          CHINESE: { score: '115.5', classRank: '10', gradeRank: '96' },
-          MATH: { score: '131', classRank: '4', gradeRank: '42' },
-          ENGLISH: { score: '125', classRank: '6', gradeRank: '62' },
-        },
-        subjects: {
-          PHYSICS: { score: '88', classRank: '5', gradeRank: '48' },
-          HISTORY: { score: '70', classRank: '28', gradeRank: '310' },
-          CHEMISTRY: { score: '89', classRank: '4', gradeRank: '40' },
-          BIOLOGY: { score: '81', classRank: '12', gradeRank: '125' },
-          POLITICS: { score: '67', classRank: '32', gradeRank: '360' },
-          GEOGRAPHY: { score: '85', classRank: '8', gradeRank: '75' },
-        },
-      },
-    ];
-    saveState();
-    renderExams();
-    showError('');
-    if (backedUp) {
-      updateSaveStatus('✓ 已填入示例数据（你原有的成绩已自动暂存，可点右上角「恢复暂存」找回）');
-    }
-  });
-
-  document.getElementById('btn-clear-all').addEventListener('click', async () => {
+  document.getElementById('btn-clear-all')?.addEventListener('click', async () => {
     const confirmed = await openConfirmModal({
       title: '清空全部成绩',
       message: '确定清空当前填写的所有考试记录和学生信息吗？清空前系统会自动为你暂存，可随时点击「恢复暂存」找回。',
@@ -1395,7 +1431,7 @@ function bindEvents() {
     switchView('section-input');
     showError('');
     if (getSnapshot()) {
-      updateSaveStatus('✓ 已清空当前表单（原有成绩已自动暂存，可点右上角「恢复暂存」找回）');
+      updateSaveStatus('✓ 已清空当前表单（原有成绩已自动暂存，可点下方「恢复暂存」找回）');
     }
   });
 
