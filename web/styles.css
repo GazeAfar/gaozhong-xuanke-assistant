@@ -1765,6 +1765,8 @@ summary:focus:not(:focus-visible) {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 18px 20px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .policy-card-main {
@@ -2420,8 +2422,12 @@ summary:focus:not(:focus-visible) {
     gap: 8px;
   }
 
-  .data-table {
+  .data-table:not(.grade-table) {
     min-width: 560px;
+  }
+
+  .data-table.grade-table {
+    min-width: 0;
   }
 }
 
