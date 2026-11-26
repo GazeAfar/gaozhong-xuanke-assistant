@@ -1804,9 +1804,10 @@ summary:focus:not(:focus-visible) {
 
 .grade-table th,
 .grade-table td {
-  padding: 7px 10px;
+  padding: 7px 6px;
   text-align: center;
-  font-size: 12.5px;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .grade-table td:first-child,
