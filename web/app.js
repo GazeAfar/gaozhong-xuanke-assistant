@@ -320,6 +320,117 @@ function restoreSnapshot() {
   updateSaveStatus(`✓ 已恢复暂存成绩${state.studentName ? `（${state.studentName}）` : ''}`);
 }
 
+function encodeSharePayload() {
+  const compactExams = (state.exams || []).map((ex) => {
+    const out = {};
+    if (ex.name) out.n = ex.name;
+    if (ex.type) out.t = ex.type;
+    if (ex.classSize) out.cs = ex.classSize;
+    if (ex.gradeSize) out.gs = ex.gradeSize;
+    if (ex.totalScore) out.ts = ex.totalScore;
+    if (ex.totalClassRank) out.tcr = ex.totalClassRank;
+    if (ex.totalGradeRank) out.tgr = ex.totalGradeRank;
+    const core = {};
+    for (const c of CORE_SUBJECTS) {
+      const v = ex.coreSubjects?.[c.code];
+      if (v && (v.score || v.classRank || v.gradeRank)) {
+        core[c.code] = [v.score || '', v.classRank || '', v.gradeRank || ''];
+      }
+    }
+    if (Object.keys(core).length > 0) out.c = core;
+    const subj = {};
+    for (const s of SUBJECTS) {
+      const v = ex.subjects?.[s.code];
+      if (v && (v.score || v.classRank || v.gradeRank)) {
+        subj[s.code] = [v.score || '', v.classRank || '', v.gradeRank || ''];
+      }
+    }
+    if (Object.keys(subj).length > 0) out.s = subj;
+    return out;
+  });
+  const payload = {
+    v: 1,
+    y: state.examYear,
+    u: state.studentName || '',
+    e: compactExams,
+  };
+  const bytes = new TextEncoder().encode(JSON.stringify(payload));
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 1) {
+    bin += String.fromCharCode(bytes[i]);
+  }
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function decodeSharePayload(encoded) {
+  if (!encoded || encoded.length > 16000) return null;
+  try {
+    const b64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+    const pad = b64.length % 4 === 0 ? '' : '='.repeat(4 - (b64.length % 4));
+    const bin = atob(b64 + pad);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i += 1) {
+      bytes[i] = bin.charCodeAt(i);
+    }
+    const parsed = JSON.parse(new TextDecoder().decode(bytes));
+    if (!parsed || !Array.isArray(parsed.e) || parsed.e.length === 0) return null;
+    const exams = parsed.e.slice(0, 12).map((item, idx) => {
+      const ex = createEmptyExam(idx);
+      if (item.n) ex.name = String(item.n).slice(0, 40);
+      if (item.t) ex.type = String(item.t).slice(0, 20);
+      if (item.cs) ex.classSize = String(item.cs);
+      if (item.gs) ex.gradeSize = String(item.gs);
+      if (item.ts) ex.totalScore = String(item.ts);
+      if (item.tcr) ex.totalClassRank = String(item.tcr);
+      if (item.tgr) ex.totalGradeRank = String(item.tgr);
+      if (item.c && typeof item.c === 'object') {
+        for (const c of CORE_SUBJECTS) {
+          const arr = item.c[c.code];
+          if (Array.isArray(arr)) {
+            ex.coreSubjects[c.code] = {
+              score: String(arr[0] ?? ''),
+              classRank: String(arr[1] ?? ''),
+              gradeRank: String(arr[2] ?? ''),
+            };
+          }
+        }
+      }
+      if (item.s && typeof item.s === 'object') {
+        for (const s of SUBJECTS) {
+          const arr = item.s[s.code];
+          if (Array.isArray(arr)) {
+            ex.subjects[s.code] = {
+              score: String(arr[0] ?? ''),
+              classRank: String(arr[1] ?? ''),
+              gradeRank: String(arr[2] ?? ''),
+            };
+          }
+        }
+      }
+      return ex;
+    });
+    const validYears = new Set(getDynamicExamYearOptions().map((o) => o.year));
+    const y = Number(parsed.y);
+    return {
+      studentName: String(parsed.u || '').slice(0, 20),
+      examYear: validYears.has(y) ? y : DEFAULT_EXAM_YEAR,
+      exams,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function buildCarryDataUrl() {
+  const base = `${window.location.origin}${window.location.pathname}`;
+  if (!hasAnyEnteredScore(state.exams)) return base;
+  try {
+    return `${base}#s=${encodeSharePayload()}`;
+  } catch {
+    return base;
+  }
+}
+
 async function initApp() {
   const yearSelect = document.getElementById('exam-year');
   const yearOptions = getDynamicExamYearOptions();
@@ -328,7 +439,21 @@ async function initApp() {
       .map((opt) => `<option value="${opt.year}">${escapeHtml(opt.label)}</option>`)
       .join('');
   }
-  loadState();
+
+  // 检测是否从微信带着成绩链接跳转到系统浏览器（#s=...，纯本地解码不经过服务器）
+  const rawHash = window.location.hash || '';
+  const sharedMatch = rawHash.match(/^#s=([A-Za-z0-9_-]+)$/);
+  const sharedData = sharedMatch ? decodeSharePayload(sharedMatch[1]) : null;
+
+  if (sharedData) {
+    state.studentName = sharedData.studentName;
+    state.examYear = sharedData.examYear;
+    state.exams = sharedData.exams;
+    saveState();
+  } else {
+    loadState();
+  }
+
   renderExams();
   bindEvents();
   updateRestoreButtonVisibility();
@@ -340,6 +465,16 @@ async function initApp() {
       (c) => `<option value="${c.id}">${escapeHtml(formatComboOptionLabel(c.displayName))}</option>`
     ).join('');
     comboSelect.value = 'P_CG';
+  }
+
+  if (sharedData) {
+    try {
+      history.replaceState(null, '', '#report-root');
+    } catch {
+      // ignore
+    }
+    await generateReport();
+    return;
   }
 
   // 刷新后自动恢复上次生成的报告，无需重新点击生成
@@ -1565,6 +1700,14 @@ function handleExportPdf() {
   const isWeChat = /MicroMessenger/i.test(navigator.userAgent || '');
   const dialog = document.getElementById('pdf-guide-dialog');
   if (isWeChat && dialog && typeof dialog.showModal === 'function') {
+    // 把已填成绩编码进当前网址的 #s= 片段，用户点右上角「在默认浏览器中打开」时成绩自动带过去（不经过服务器）
+    if (hasAnyEnteredScore(state.exams)) {
+      try {
+        history.replaceState(null, '', `#s=${encodeSharePayload()}`);
+      } catch {
+        // ignore
+      }
+    }
     const tipEl = document.getElementById('pdf-copy-status');
     if (tipEl) tipEl.textContent = '';
     dialog.showModal();
@@ -1583,10 +1726,19 @@ function initPdfGuideModal() {
   const tipEl = document.getElementById('pdf-copy-status');
   if (!dialog) return;
 
+  const restoreCleanHash = () => {
+    try {
+      history.replaceState(null, '', `#${state.activeView || 'report-root'}`);
+    } catch {
+      // ignore
+    }
+  };
   const close = () => {
     if (dialog.open) dialog.close();
+    restoreCleanHash();
   };
   closeBtn?.addEventListener('click', close);
+  dialog.addEventListener('cancel', restoreCleanHash);
   dialog.addEventListener('click', (e) => {
     if (e.target === dialog) close();
   });
@@ -1601,9 +1753,12 @@ function initPdfGuideModal() {
   });
 
   copyLinkBtn?.addEventListener('click', async () => {
-    const ok = await copyTextToClipboard(window.location.href);
+    const carryUrl = buildCarryDataUrl();
+    const ok = await copyTextToClipboard(carryUrl);
     if (tipEl) {
-      tipEl.textContent = ok ? '✓ 已复制网址，请打开手机自带浏览器粘贴访问并导出 PDF' : '复制失败，请点右上角「···」选择在浏览器打开';
+      tipEl.textContent = ok
+        ? '✓ 已复制带成绩的专属链接，粘贴到手机浏览器打开即可直接导出 PDF'
+        : '复制失败，请直接点右上角「···」选择在默认浏览器打开';
     }
   });
 }

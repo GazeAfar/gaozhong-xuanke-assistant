@@ -486,18 +486,18 @@
         微信内置浏览器不支持直接调用系统打印导出 PDF，你可以选择以下任意一种方式保存或分享：
       </p>
       <ol class="pdf-guide-steps">
-        <li><strong>导出完整 PDF：</strong>点击微信右上角 <strong>「···」</strong> → 选择 <strong>「在默认浏览器中打开」</strong>，再点 <strong>「导出 PDF」</strong> 即可保存 A4 完整文档。</li>
-        <li><strong>直接发给家人：</strong>点击下方按钮一键复制选科摘要，直接粘贴到微信聊天。</li>
+        <li><strong>导出完整 PDF（自动带成绩）：</strong>保持本弹窗打开，直接点微信右上角 <strong>「···」</strong> → 选择 <strong>「在默认浏览器中打开」</strong>，系统会自动带入刚填好的全部成绩并生成白皮书，再点「导出 PDF」即可保存。</li>
+        <li><strong>或复制专属链接 / 摘要：</strong>点击下方按钮复制带成绩的链接到手机浏览器打开，或直接复制文字摘要发到微信群。</li>
       </ol>
       <div id="pdf-copy-status" class="save-status" style="margin-bottom:12px;min-height:18px;" aria-live="polite"></div>
       <div class="pdf-guide-actions">
-        <button type="button" class="btn btn-primary" id="btn-copy-summary">复制选科摘要</button>
-        <button type="button" class="btn btn-secondary" id="btn-copy-page-link">复制页面网址</button>
+        <button type="button" class="btn btn-primary" id="btn-copy-page-link">复制带成绩链接</button>
+        <button type="button" class="btn btn-secondary" id="btn-copy-summary">复制文字摘要</button>
       </div>
     </div>
   </dialog>
 
-  <script src="/app.js?v=43"></script>
+  <script src="/app.js?v=44"></script>
   <script>
     (function () {
       var btn = document.getElementById('btn-portal-nav-toggle');
