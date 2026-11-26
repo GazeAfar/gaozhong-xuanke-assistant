@@ -1,0 +1,25 @@
+.empty-card {
+  background-color: #FFFFFF;
+  border: 1rpx solid #D7DEEA;
+  border-radius: 24rpx;
+  padding: 48rpx 32rpx;
+  text-align: center;
+}
+
+.empty-title {
+  font-size: max(34rpx, 17px);
+  font-weight: 600;
+  color: #172033;
+  margin-bottom: 12rpx;
+}
+
+.empty-desc {
+  font-size: max(28rpx, 14px);
+  color: #4B5563;
+  line-height: 1.55;
+  margin-bottom: 24rpx;
+}
+
+.empty-btn {
+  margin-top: 12rpx;
+}

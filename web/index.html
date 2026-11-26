@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>高中选科助手 - 高一选科智能分析、新高考专业覆盖率与就业趋势查询</title>
+  <meta
+    name="description"
+    content="高中选科助手是面向全国高一学生与家长的免费新高考选科决策工具（支持3+1+2并陆续覆盖3+3省份）。按省份进入对应高考模式，录入多次月考期中期末成绩与排名，一键生成专属选科白皮书、组合专业覆盖率对比与毕业年就业趋势分析。首批已上线江苏省。"
+  />
+  <meta
+    name="keywords"
+    content="高中选科,高一选科,高中选科助手,新高考选科,3+1+2选科,3+3选科,江苏高中选科,江苏高一选科,南京高中选科,选科专业覆盖率,等级赋分制"
+  />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
+  <meta name="applicable-device" content="pc,mobile" />
+  <link rel="canonical" href="https://xuanke.visc.cn/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="zh_CN" />
+  <meta property="og:site_name" content="高中选科助手" />
+  <meta property="og:url" content="https://xuanke.visc.cn/" />
+  <meta property="og:title" content="高中选科助手 - 高一选科智能分析与专业覆盖率查询" />
+  <meta
+    property="og:description"
+    content="选择您所在的高考省份，基于官方高校专业选科目录与学生多次成绩排名，免费生成专属高中选科与就业分析白皮书。"
+  />
+  <meta property="og:image" content="https://xuanke.visc.cn/logo.jpg?v=2" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="高中选科助手 - 高一选科智能分析" />
+  <meta
+    name="twitter:description"
+    content="面向全国高一学生与家长的免费新高考选科与就业分析工具，首批上线江苏省。"
+  />
+  <link rel="icon" type="image/jpeg" href="/logo.jpg?v=2" />
+  <link rel="stylesheet" href="/styles.css?v=55" />
+  <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-K9LT3P6G"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "高中选科助手",
+      "alternateName": ["高一选科助手", "新高考选科助手"],
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Web",
+      "inLanguage": "zh-CN",
+      "isAccessibleForFree": true,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "CNY"
+      },
+      "description": "面向全国高一学生与家长的免费新高考选科分析工具，按省份匹配官方高校专业选科目录与等级赋分规则，首批上线江苏省。"
+    }
+  </script>
+</head>
+<body>
+  <header class="topbar" id="site-header">
+    <div class="container topbar-inner">
+      <a href="/" class="brand" style="text-decoration:none;">
+        <span class="brand-logo-wrap">
+          <img class="brand-logo" src="/logo.jpg?v=2" alt="高中选科助手 Logo" width="52" height="52" />
+        </span>
+        <div class="brand-text">
+          <h1>高中选科助手</h1>
+          <p class="subtitle">新高考智能选科、专业覆盖率与就业趋势分析</p>
+        </div>
+      </a>
+
+      <nav class="main-nav portal-nav" id="portal-nav" aria-label="主导航">
+        <a href="/" class="nav-item nav-active" style="text-decoration:none;">首页</a>
+        <a href="/modes" class="nav-item" style="text-decoration:none;">新高考模式</a>
+        <a href="/fufenzhi" class="nav-item" style="text-decoration:none;">赋分制详解</a>
+        <a href="/contact" class="nav-item" style="text-decoration:none;">联系我们</a>
+      </nav>
+
+      <div class="topbar-actions">
+        <a href="/#province-picker" class="btn btn-primary" style="text-decoration:none;">选择省份测算</a>
+        <button type="button" class="nav-toggle portal-nav-toggle" id="btn-portal-nav-toggle" aria-label="展开导航" aria-expanded="false" aria-controls="portal-nav">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container main-content">
+    <!-- 首屏直接进入：选择高考省份 -->
+    <section id="province-picker" class="doc-sheet portal-sheet" aria-label="选择高考省份">
+      <div class="portal-head">
+        <h2>选择您的高考省份</h2>
+        <p class="hint">不同省份的新高考模式（3+1+2 / 3+3）、等级赋分规则与高校专业选科目录存在差异，请选择所在省份进入专属工作台。</p>
+      </div>
+
+      <!-- 已上线省份：高亮主卡片 -->
+      <div class="province-live-card">
+        <div class="province-live-info">
+          <div class="province-live-title-row">
+            <h3>江苏省</h3>
+            <span class="pill pill-success">已上线 · 3+1+2 模式</span>
+          </div>
+          <p class="province-live-desc">
+            完整收录江苏省教育考试院公布的 <strong>79,753 条</strong>在苏招生高校专业选科要求，支持多次月考/期中期末成绩与排名录入、全 12 种组合专业覆盖率横向对比及毕业年就业白皮书导出。
+          </p>
+          <div class="province-quick-links">
+            <a href="/jiangsu/wuhuadi" class="pill" style="text-decoration:none;">物化地分析</a>
+            <a href="/jiangsu/wuhuasheng" class="pill" style="text-decoration:none;">物化生分析</a>
+            <a href="/jiangsu/wuhuazheng" class="pill" style="text-decoration:none;">物化政分析</a>
+            <a href="/jiangsu/shizhengdi" class="pill" style="text-decoration:none;">史政地分析</a>
+            <a href="/fufenzhi" class="pill" style="text-decoration:none;">江苏赋分制详解</a>
+          </div>
+        </div>
+        <div class="province-live-action">
+          <a href="/jiangsu" class="btn btn-primary btn-lg" style="text-decoration:none;">进入江苏选科工作台 →</a>
+        </div>
+      </div>
+
+      <!-- 陆续上线省份 -->
+      <div class="upcoming-block">
+        <div class="upcoming-head">
+          <h3>更多省份陆续接入中</h3>
+          <a href="/contact" class="footer-link-btn" style="color:var(--primary-ink);font-weight:600;">申请优先上线我的省份 →</a>
+        </div>
+        <div class="province-grid">
+          <div class="province-tile"><strong>浙江省</strong><span class="hint">3+3（7选3）· 规划中</span></div>
+          <div class="province-tile"><strong>广东省</strong><span class="hint">3+1+2 · 规划中</span></div>
+          <div class="province-tile"><strong>山东省</strong><span class="hint">3+3（6选3）· 规划中</span></div>
+          <div class="province-tile"><strong>湖北省</strong><span class="hint">3+1+2 · 规划中</span></div>
+          <div class="province-tile"><strong>湖南省</strong><span class="hint">3+1+2 · 规划中</span></div>
+          <div class="province-tile"><strong>四川省</strong><span class="hint">3+1+2 · 规划中</span></div>
+          <div class="province-tile"><strong>河北省</strong><span class="hint">3+1+2 · 规划中</span></div>
+          <div class="province-tile"><strong>福建省</strong><span class="hint">3+1+2 · 规划中</span></div>
+          <div class="province-tile"><strong>安徽省</strong><span class="hint">3+1+2 · 规划中</span></div>
+          <div class="province-tile"><strong>重庆市</strong><span class="hint">3+1+2 · 规划中</span></div>
+          <div class="province-tile"><strong>北京市 / 上海市</strong><span class="hint">3+3 · 规划中</span></div>
+          <div class="province-tile"><strong>辽宁 / 江西 / 广西等</strong><span class="hint">3+1+2 · 规划中</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 全国通用新高考选科常识 -->
+    <section id="gaokao-modes" class="guide-section" aria-label="全国新高考模式概览">
+      <div class="doc-sheet guide-sheet">
+        <div class="guide-head">
+          <div>
+            <h2>全国新高考两种主流模式速览</h2>
+            <p class="hint">进入具体省份工作台后，系统将自动展示对应省份的详细计分与等级赋分换算规则</p>
+          </div>
+          <a href="/fufenzhi" class="btn btn-secondary" style="text-decoration:none;">查看等级赋分制详解 →</a>
+        </div>
+
+        <div class="policy-grid">
+          <div class="policy-card policy-card-main">
+            <h3>「3+1+2」模式（全国多数新高考省份）</h3>
+            <p class="policy-desc">
+              语文、数学、外语为必考统考科目；在<strong>物理、历史</strong>中首选 1 门（按原始分计分，分物理类/历史类划线）；在<strong>化学、生物、政治、地理</strong>中再选 2 门（按等级赋分计分），共构成 <strong>12 种</strong>选科组合。
+            </p>
+          </div>
+          <div class="policy-card">
+            <h3>「3+3」模式（浙 / 沪 / 京 / 津 / 鲁 / 琼）</h3>
+            <p class="policy-desc">
+              语文、数学、外语为必考统考科目；在剩余 6 门（浙江含技术共 7 门）选考科目中任选 3 门，全部选考科目均实行等级赋分制，共构成 <strong>20 种（浙江 35 种）</strong>选科组合。
+            </p>
+          </div>
+        </div>
+
+        <div class="faq-block">
+          <h3>高中选科 / 高一选科常见问题</h3>
+          <div class="faq-list">
+            <details class="faq-item" open>
+              <summary>为什么需要先选择省份再进行选科分析？</summary>
+              <p>各省实行的新高考模式不同（如 <strong>3+1+2</strong> 共 12 种组合，<strong>3+3</strong> 共 20 或 35 种组合），再选科目的等级赋分档位及各高校在该省公布的招生专业目录也不同。按省份进入专属工作台，才能基于本省真实数据做精准匹配。</p>
+            </details>
+            <details class="faq-item">
+              <summary>高一选科应该优先看分数还是看排名？</summary>
+              <p>建议<strong>优先看排名百分位，结合多次考试趋势</strong>。单次月考的卷面分受试题难易影响极大，而班级或年级排名更能反映孩子在同龄人中的真实位次，也更贴合新高考选考科目的等级赋分逻辑。</p>
+            </details>
+            <details class="faq-item">
+              <summary>「物化地」和「物化生」到底怎么选？</summary>
+              <p>两者在工学、理学、计算机、电子信息、临床医学等绝大多数专业上覆盖率几乎一致（仅少数生物工程或部分医学院校细分专业要求必选生物）。如果记忆力强、偏向医学/生物方向可选<strong>物化生</strong>；如果不想背大量生物名词，<strong>物化地</strong>往往学习负担更轻。</p>
+            </details>
+            <details class="faq-item">
+              <summary>高中选科助手免费吗？进入省份工作台后的数据安全吗？</summary>
+              <p><strong>完全免费。</strong>进入具体省份工作台后，您录入的考试成绩与暂存草稿均仅保存在您当前设备的浏览器本地（<code>localStorage</code>），服务端不会留存或共享任何个人成绩记录。</p>
+            </details>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 统一 3 列站点页脚 -->
+    <footer class="site-footer" aria-label="网站底部信息">
+      <div class="footer-grid">
+        <div class="footer-brand-col">
+          <div class="footer-brand-row">
+            <img src="/logo.jpg?v=2" alt="高中选科助手" width="32" height="32" class="footer-logo" />
+            <strong>高中选科助手</strong>
+          </div>
+          <p class="footer-desc">面向高一学生与家长的新高考选科决策与就业分析工具（支持 3+1+2 及规划中的 3+3 省份），基于官方高校专业选科目录提供免费、客观的数据参考。</p>
+        </div>
+
+        <div class="footer-links-col">
+          <h4>选科专题与指南</h4>
+          <ul>
+            <li><a href="/jiangsu" class="footer-link-btn">江苏 3+1+2 选科工作台</a></li>
+            <li><a href="/fufenzhi" class="footer-link-btn">新高考等级赋分制详解</a></li>
+            <li><a href="/jiangsu/wuhuadi" class="footer-link-btn">物化地专业覆盖率分析</a></li>
+            <li><a href="/jiangsu/wuhuasheng" class="footer-link-btn">物化生专业覆盖率分析</a></li>
+            <li><a href="/jiangsu/shizhengdi" class="footer-link-btn">史政地专业覆盖率分析</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-links-col">
+          <h4>帮助与合规</h4>
+          <ul>
+            <li><a href="/privacy" class="footer-link-btn">隐私保护说明</a></li>
+            <li><a href="/disclaimer" class="footer-link-btn">免责声明与数据来源</a></li>
+            <li><a href="/contact" class="footer-link-btn">联系我们 / 意见反馈</a></li>
+            <li><a href="/sitemap.xml" target="_blank" rel="noopener" class="footer-link-btn">站点地图（sitemap.xml）</a></li>
+            <li><a href="/llms.txt" target="_blank" rel="noopener" class="footer-link-btn">AI 检索说明（llms.txt）</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>© 2026 高中选科助手 · 保留所有权利</span>
+        <span class="footer-bottom-note">本工具仅提供家庭选科决策数据参考，具体招生计划与选考要求请以各省教育考试院当年正式公布为准。</span>
+      </div>
+    </footer>
+  </main>
+  <script>
+    (function () {
+      var btn = document.getElementById('btn-portal-nav-toggle');
+      var nav = document.getElementById('portal-nav');
+      var header = document.getElementById('site-header');
+      if (!btn || !nav) return;
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var open = nav.classList.toggle('nav-open');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      nav.querySelectorAll('a').forEach(function (a) {
+        a.addEventListener('click', function () {
+          nav.classList.remove('nav-open');
+          btn.setAttribute('aria-expanded', 'false');
+        });
+      });
+      document.addEventListener('click', function (e) {
+        if (nav.classList.contains('nav-open') && header && !header.contains(e.target)) {
+          nav.classList.remove('nav-open');
+          btn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

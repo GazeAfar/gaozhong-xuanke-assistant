@@ -1,0 +1,9 @@
+<view class="req-badge req-{{status}}">
+  <text class="req-icon" wx:if="{{status === 'eligible'}}">✓</text>
+  <text class="req-icon" wx:elif="{{status === 'ineligible'}}">✕</text>
+  <text class="req-icon" wx:else>?</text>
+
+  <text wx:if="{{status === 'eligible'}}">{{referenceYear ? '参考 ' + referenceYear + ' 年：' : ''}}满足已知选科条件</text>
+  <text wx:elif="{{status === 'ineligible'}}">{{referenceYear ? '参考 ' + referenceYear + ' 年：' : ''}}不满足该条条件</text>
+  <text wx:else>待核实</text>
+</view>

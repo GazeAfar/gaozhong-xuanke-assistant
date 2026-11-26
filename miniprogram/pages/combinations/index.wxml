@@ -1,0 +1,47 @@
+<view class="page-with-footer">
+  <view class="secondary-text top-hint">
+    全部 12 种组合均免费查看。选择 2 至 3 组即可进入同屏比较。
+  </view>
+
+  <block wx:if="{{rankedList.length > 0}}">
+    <view class="group-header">可比较的组合（{{rankedList.length}}）</view>
+    <combination-card
+      wx:for="{{rankedList}}"
+      wx:key="id"
+      item="{{item}}"
+      selectedForCompare="{{compareIds.indexOf(item.id) >= 0}}"
+      bind:togglecompare="onToggleCompare"
+    />
+  </block>
+
+  <block wx:if="{{needsInputList.length > 0}}">
+    <view class="group-header">补充信息后可比较（{{needsInputList.length}}）</view>
+    <combination-card
+      wx:for="{{needsInputList}}"
+      wx:key="id"
+      item="{{item}}"
+      selectedForCompare="{{compareIds.indexOf(item.id) >= 0}}"
+      bind:togglecompare="onToggleCompare"
+    />
+  </block>
+
+  <block wx:if="{{excludedList.length > 0}}">
+    <view class="group-header">已按当前条件排除（{{excludedList.length}}）</view>
+    <combination-card
+      wx:for="{{excludedList}}"
+      wx:key="id"
+      item="{{item}}"
+      showCompareButton="{{false}}"
+    />
+  </block>
+</view>
+
+<view class="fixed-footer">
+  <button
+    class="btn-primary {{compareIds.length < 2 ? 'btn-primary-disabled' : ''}}"
+    disabled="{{compareIds.length < 2}}"
+    bindtap="onStartCompare"
+  >
+    {{compareIds.length < 2 ? '请至少选择 2 组（已选 ' + compareIds.length + ' 组）' : '开始比较（已选 ' + compareIds.length + ' 组）'}}
+  </button>
+</view>

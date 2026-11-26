@@ -1,0 +1,64 @@
+<view class="page-with-footer">
+  <empty-state
+    wx:if="{{cards.length < 2}}"
+    title="请选择 2 至 3 个组合进行比较"
+    description="当前已选 {{cards.length}} 组。你可以从全部 12 个组合中挑选想对比的方案。"
+    actionText="去选择组合"
+    bind:action="onChangeSelection"
+  />
+
+  <block wx:else>
+    <!-- 维度 1：所选组合 -->
+    <view class="dim-title">所选组合（{{cards.length}} 组）</view>
+    <view class="compare-row">
+      <view class="narrow-card" wx:for="{{cards}}" wx:key="id">
+        <view class="narrow-title">{{item.displayName}}</view>
+        <view class="tag tag-primary">{{item.label}}</view>
+        <view class="remove-link" data-id="{{item.id}}" bindtap="onRemoveCombo">移除</view>
+      </view>
+    </view>
+
+    <!-- 维度 2：已知学习优势 -->
+    <view class="dim-title">已知学习优势</view>
+    <view class="compare-row">
+      <view class="narrow-card" wx:for="{{cards}}" wx:key="id">
+        <view class="dim-line" wx:for="{{item.advantageLines}}" wx:key="*this" wx:for-item="line">
+          {{line}}
+        </view>
+      </view>
+    </view>
+
+    <!-- 维度 3：已知学科兴趣 -->
+    <view class="dim-title">已知学科兴趣</view>
+    <view class="compare-row">
+      <view class="narrow-card" wx:for="{{cards}}" wx:key="id">
+        <view class="dim-line" wx:for="{{item.interestLines}}" wx:key="*this" wx:for-item="line">
+          {{line}}
+        </view>
+      </view>
+    </view>
+
+    <!-- 维度 4：专业选科条件 -->
+    <view class="dim-title">专业选科条件</view>
+    <view class="compare-row">
+      <view class="narrow-card" wx:for="{{cards}}" wx:key="id">
+        <view class="dim-line" wx:for="{{item.majorLines}}" wx:key="*this" wx:for-item="line">
+          {{line}}
+        </view>
+      </view>
+    </view>
+
+    <!-- 维度 5：待核实与完整度 -->
+    <view class="dim-title">需要关注与资料完整度</view>
+    <view class="compare-row">
+      <view class="narrow-card" wx:for="{{cards}}" wx:key="id">
+        <view class="dim-line dim-strong">{{item.completenessText}}</view>
+        <view class="dim-line">{{item.attentionText}}</view>
+      </view>
+    </view>
+  </block>
+</view>
+
+<view class="fixed-footer" wx:if="{{cards.length >= 2}}">
+  <button class="btn-secondary" bindtap="onChangeSelection">更换或增减比较组合</button>
+</view>

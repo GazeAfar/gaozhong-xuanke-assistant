@@ -1,0 +1,93 @@
+<view class="page-container">
+  <view class="hero-card">
+    <view class="brand-row">
+      <view class="brand-badge">选科</view>
+      <view class="brand-info">
+        <text class="brand-name">高中选科助手</text>
+        <text class="brand-sub">面向高一家庭的轻量选科比较工具</text>
+      </view>
+    </view>
+
+    <view class="hero-title hero-headline">选科之前，先比较一下</view>
+    <view class="hero-desc">填一填科目优势，看看哪些组合值得比较</view>
+
+    <button class="btn-primary hero-cta" bindtap="onStartOrContinue">
+      {{hasDraft ? '继续填写' : '开始测算'}}
+    </button>
+
+    <view class="restart-row" wx:if="{{hasDraft}}">
+      <button class="btn-ghost" bindtap="onRestart">清除草稿，重新开始</button>
+    </view>
+  </view>
+
+  <view class="card region-card">
+    <view class="region-col">
+      <text class="secondary-text">当前省份</text>
+      <text class="region-value">{{provinceName}}</text>
+      <text class="source-text">3+1+2 · 共 12 种组合</text>
+    </view>
+    <view class="region-divider"></view>
+    <picker
+      class="region-col"
+      mode="selector"
+      range="{{examYearOptions}}"
+      range-key="label"
+      value="{{examYearIndex}}"
+      bindchange="onYearChange"
+    >
+      <text class="secondary-text">预计高考年份</text>
+      <view class="region-picker-val">
+        <text class="region-value">{{examYearLabel}}</text>
+        <text class="picker-arrow">▾</text>
+      </view>
+      <text class="source-text">点击可随时修改</text>
+    </picker>
+  </view>
+
+  <view class="notice-warning" wx:if="{{loadError}}">
+    当前未能联网更新公共规则，你可以重试加载或使用已缓存版本继续测算。
+    <view class="retry-link" bindtap="refreshState">重试加载</view>
+  </view>
+
+  <view class="card highlights-card">
+    <view class="highlight-item">
+      <text class="highlight-check">✓</text>
+      <view class="highlight-text">
+        <text class="body-text">无需填写孩子姓名或成绩单</text>
+        <text class="source-text">仅在本机计算与保存，不要求注册登录</text>
+      </view>
+    </view>
+    <view class="highlight-item">
+      <text class="highlight-check">✓</text>
+      <view class="highlight-text">
+        <text class="body-text">完整建议与组合对比免费</text>
+        <text class="source-text">全部 12 组建议、理由与专业查询无广告门槛</text>
+      </view>
+    </view>
+    <view class="highlight-item">
+      <text class="highlight-check">✓</text>
+      <view class="highlight-text">
+        <text class="body-text">随时修改条件，和孩子一起讨论</text>
+        <text class="source-text">结果用于缩小讨论范围，不替代当年官方招生计划</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card quick-links">
+    <view class="quick-row" bindtap="onGoMajors">
+      <view>
+        <view class="body-text quick-title">查专业选科要求</view>
+        <view class="source-text">按专业或院校查看已知选科条件与来源年份</view>
+      </view>
+      <text class="quick-arrow">›</text>
+    </view>
+    <view class="quick-divider"></view>
+    <view class="quick-row" bindtap="onGoAbout">
+      <view>
+        <view class="body-text quick-title">方法说明与数据来源</view>
+        <view class="source-text">了解推荐规则、版本（{{ruleVersion}}）与隐私边界</view>
+      </view>
+      <text class="quick-arrow">›</text>
+    </view>
+  </view>
+</view>

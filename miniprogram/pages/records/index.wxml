@@ -1,0 +1,39 @@
+<view class="page-container">
+  <empty-state
+    wx:if="{{records.length === 0}}"
+    title="还没有记录"
+    description="测算后会保存在这台设备，方便随时回顾和修改。"
+    actionText="开始测算"
+    bind:action="onStartAssessment"
+  />
+
+  <block wx:else>
+    <view class="row-between header-bar">
+      <text class="secondary-text">最近保存 {{records.length}} / 20 份</text>
+      <text class="clear-all-link" bindtap="onClearAll">清空全部</text>
+    </view>
+
+    <view class="card record-card" wx:for="{{records}}" wx:key="id">
+      <view data-id="{{item.id}}" bindtap="onOpenReport">
+        <view class="row-between">
+          <text class="record-meta">{{item.metaText}}</text>
+          <text class="source-text">{{item.timeText}}</text>
+        </view>
+        <view class="record-headline">{{item.headline}}</view>
+        <view class="source-text">{{item.versionText}}</view>
+      </view>
+
+      <view class="record-actions">
+        <text class="open-link" data-id="{{item.id}}" bindtap="onOpenReport">查看原报告</text>
+        <text class="delete-link" data-id="{{item.id}}" bindtap="onDeleteOne">删除</text>
+      </view>
+    </view>
+  </block>
+
+  <view class="card footer-card section-gap">
+    <view class="source-text">
+      记录保存在这台设备，无需登录也不做云端同步；更换设备或清理微信缓存后可能无法找回。
+    </view>
+    <view class="about-link" bindtap="onGoAbout">方法说明、隐私与反馈 ›</view>
+  </view>
+</view>

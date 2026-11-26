@@ -1,0 +1,128 @@
+<view class="page-container">
+  <empty-state
+    wx:if="{{notFound}}"
+    title="未找到这份报告"
+    description="可能是记录已被删除，你可以重新填写并生成新的选科建议。"
+    actionText="去填写情况"
+    bind:action="onAdjustInput"
+  />
+
+  <block wx:elif="{{report}}">
+    <!-- 顶部概览 -->
+    <view class="card-soft summary-card">
+      <view class="summary-meta">
+        {{report.provinceName}} · {{report.examYear ? report.examYear + ' 年高考' : '高考年份待定'}}
+      </view>
+      <view class="secondary-text" wx:if="{{report.referenceYear}}">
+        专业条件参考 {{report.referenceYear}} 年资料（最终以当年官方招生要求为准）
+      </view>
+      <view class="secondary-text" wx:else>
+        根据你填写的科目优势与兴趣整理，适合用来和孩子一起讨论。
+      </view>
+
+      <view class="snapshot-toggle" bindtap="onToggleInputSnapshot">
+        {{showInputSnapshot ? '收起本次填写内容 ▴' : '查看本次填写内容 ▾'}}
+      </view>
+
+      <view class="snapshot-grid" wx:if="{{showInputSnapshot}}">
+        <view class="snapshot-item" wx:for="{{inputSummaryRows}}" wx:key="name">
+          <text class="snapshot-subj">{{item.name}}</text>
+          <text class="snapshot-val">{{item.advText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 版本变更提醒 -->
+    <view class="notice-warning" wx:if="{{isOutdatedVersion}}">
+      这份记录保存的是历史规则版本快照，原结果保持不变。如需按最新规则重新生成，请点击下方「调整填写」。
+    </view>
+
+    <!-- 引擎提醒 -->
+    <view
+      class="notice-warning"
+      wx:for="{{report.resultSnapshot.warnings}}"
+      wx:key="*this"
+    >
+      {{item}}
+    </view>
+
+    <!-- 状态 1：无可行组合（硬约束冲突） -->
+    <view class="card" wx:if="{{report.resultSnapshot.status === 'no_feasible_combination'}}">
+      <view class="card-title">当前条件没有同时满足的组合</view>
+      <view class="notice-error" wx:for="{{report.resultSnapshot.conflicts}}" wx:key="*this">
+        {{item}}
+      </view>
+      <view class="secondary-text">
+        我们保留了你设置的条件，没有自动放宽。你可以修改学校开班限制或调整意向专业后再比较。
+      </view>
+      <button class="btn-primary action-mt" bindtap="onAdjustInput">修改条件</button>
+    </view>
+
+    <!-- 状态 2：输入不足（已知优势不足 4 科或无完整可评分组合） -->
+    <view class="card" wx:elif="{{report.resultSnapshot.status === 'insufficient_input'}}">
+      <view class="card-title">信息还不够充分，暂不生成排序</view>
+      <view class="body-text">
+        有几科还不了解，先补充后再比较会更有帮助。
+      </view>
+      <view class="missing-box" wx:if="{{unknownSubjectNames.length > 0}}">
+        <text class="secondary-text">待补充科目：</text>
+        <text class="missing-list">{{unknownSubjectNames.join('、')}}</text>
+      </view>
+      <view class="btn-stack">
+        <button class="btn-primary" bindtap="onAdjustInput">补充科目情况</button>
+        <button class="btn-secondary" bindtap="onGoAllCombinations">先看全部 12 组</button>
+      </view>
+    </view>
+
+    <!-- 状态 3：正常排序建议 -->
+    <block wx:else>
+      <view class="section-heading">建议优先讨论的组合</view>
+
+      <combination-card
+        wx:for="{{report.resultSnapshot.recommendations}}"
+        wx:key="id"
+        item="{{item}}"
+        highlightFirst="{{index === 0}}"
+        selectedForCompare="{{compareIds.indexOf(item.id) >= 0}}"
+        bind:togglecompare="onToggleCompare"
+      />
+
+      <!-- 平局不隐藏：免费展开同等接近的组合 -->
+      <view class="card" wx:if="{{report.resultSnapshot.extraTiedRecommendations.length > 0}}">
+        <view class="row-between">
+          <text class="body-text">另有 {{report.resultSnapshot.extraTiedRecommendations.length}} 组同等接近的组合</text>
+          <text class="expand-link" bindtap="onToggleExtraTied">
+            {{showExtraTied ? '收起' : '免费展开'}}
+          </text>
+        </view>
+      </view>
+
+      <block wx:if="{{showExtraTied}}">
+        <combination-card
+          wx:for="{{report.resultSnapshot.extraTiedRecommendations}}"
+          wx:key="id"
+          item="{{item}}"
+          selectedForCompare="{{compareIds.indexOf(item.id) >= 0}}"
+          bind:togglecompare="onToggleCompare"
+        />
+      </block>
+    </block>
+
+    <!-- 底部操作区 -->
+    <view class="btn-stack section-gap">
+      <button class="btn-primary" bindtap="onGoCompare">
+        比较已选组合（已选 {{compareIds.length}} 组）
+      </button>
+      <button class="btn-secondary" bindtap="onGoAllCombinations">查看全部 12 组</button>
+      <button class="btn-secondary" bindtap="onAdjustInput">调整填写</button>
+    </view>
+
+    <view class="card method-footer section-gap">
+      <view class="source-text">
+        版本信息：算法 v{{report.algorithmVersion}} · 省份规则 {{report.provinceRuleVersion}}
+        {{report.datasetVersion ? ' · 专业库 ' + report.datasetVersion : ''}}
+      </view>
+      <view class="method-link" bindtap="onGoAbout">查看方法说明与官方来源 ›</view>
+    </view>
+  </block>
+</view>

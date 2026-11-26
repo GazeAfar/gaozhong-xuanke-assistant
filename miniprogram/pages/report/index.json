@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "选科建议",
+  "usingComponents": {
+    "combination-card": "/components/combination-card/index",
+    "empty-state": "/components/empty-state/index"
+  }
+}

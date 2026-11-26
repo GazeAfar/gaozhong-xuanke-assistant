@@ -1,0 +1,10 @@
+node_modules/
+dist/
+packages/*/dist/
+data/runtime/
+.env
+.env.local
+project.private.config.json
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,96 @@
+<view class="page-container">
+  <view class="card search-card">
+    <view class="row-between meta-row">
+      <text class="tag tag-primary">江苏 · {{dataYear ? dataYear + ' 年资料' : '官方选科查询'}}</text>
+      <text class="source-text" wx:if="{{datasetVersion}}">版本 {{datasetVersion}}</text>
+    </view>
+
+    <view class="search-box">
+      <input
+        class="search-input"
+        placeholder="搜索专业或院校"
+        value="{{query}}"
+        maxlength="50"
+        confirm-type="search"
+        bindinput="onInput"
+      />
+      <text class="clear-btn" wx:if="{{query}}" bindtap="onClearQuery">清空</text>
+    </view>
+
+    <picker
+      mode="selector"
+      range="{{comboOptions}}"
+      range-key="label"
+      value="{{comboIndex}}"
+      bindchange="onComboChange"
+    >
+      <view class="filter-row">
+        <text class="secondary-text">按选科组合查看匹配：</text>
+        <text class="filter-val">{{comboOptions[comboIndex].label}} ▾</text>
+      </view>
+    </picker>
+  </view>
+
+  <view class="notice-warning" wx:if="{{available && scopeNote}}">
+    {{scopeNote}}
+  </view>
+
+  <view class="loading-hint" wx:if="{{loading}}">正在查找...</view>
+
+  <!-- 云端正式库尚未接入或断网时：展示真实状态与江苏省教育考试院官方入口，绝不编造数据 -->
+  <view class="card" wx:elif="{{!available}}">
+    <view class="card-title">在线专业库暂未就绪</view>
+    <view class="body-text unavailable-desc">{{unavailableMessage}}</view>
+    <view class="official-box">
+      <view class="source-text">江苏省教育考试院 2027 选科官方查询系统：</view>
+      <view class="official-url">{{officialPortalUrl}}</view>
+    </view>
+    <view class="unavailable-actions">
+      <button class="btn-primary" bindtap="onCopyOfficialUrl">复制官方查询网址</button>
+      <button class="btn-secondary" bindtap="onRetry">重新连接查询</button>
+    </view>
+  </view>
+
+  <empty-state
+    wx:elif="{{items.length === 0}}"
+    title="当前收录范围内没有找到"
+    description="试试更短的专业或院校名称，或清空筛选条件。"
+    actionText="清空搜索"
+    bind:action="onClearQuery"
+  />
+
+  <view wx:else class="result-list">
+    <view
+      class="card offering-card"
+      wx:for="{{items}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="onOpenDetail"
+    >
+      <view class="row-between">
+        <text class="offering-major">{{item.majorName}}</text>
+        <text class="source-text">{{item.level}} · {{item.dataYear}} 年</text>
+      </view>
+      <view class="offering-school">{{item.institutionName}}</view>
+      <view class="offering-req">{{item.requirementSummary}}</view>
+
+      <view class="offering-footer" wx:if="{{item.matchStatus}}">
+        <requirement-badge status="{{item.matchStatus}}" />
+        <text class="detail-link">查看详情 ›</text>
+      </view>
+      <view class="offering-footer" wx:else>
+        <text class="source-text">选择上方组合可查看是否满足选科条件</text>
+        <text class="detail-link">查看详情 ›</text>
+      </view>
+    </view>
+
+    <button
+      wx:if="{{nextCursor}}"
+      class="btn-secondary"
+      disabled="{{loadingMore}}"
+      bindtap="onLoadMore"
+    >
+      {{loadingMore ? '加载中...' : '加载更多条目'}}
+    </button>
+  </view>
+</view>

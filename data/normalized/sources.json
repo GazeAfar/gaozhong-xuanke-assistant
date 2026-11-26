@@ -1,0 +1,32 @@
+[
+  {
+    "id": "S01",
+    "title": "省教育厅关于发布2027年拟在江苏招生的普通高校专业选考科目要求的公告",
+    "publisher": "江苏省教育考试院（转发省教育厅）",
+    "url": "https://www.jseea.cn/webfile/index/index_zkxx/2025-02-20/7298268759544827904.html",
+    "publishedAt": "2025-02-20",
+    "checkedAt": "2026-11-25",
+    "sha256": "102914d344201306fe497094c77f65c02b74151b7c33be4123acbf60079ef5cd",
+    "usageNote": "已核查并导入 2027 年江苏 3+1+2 普通高校 79,753 条专业选考科目要求；实际招生以当年计划为准。"
+  },
+  {
+    "id": "S01_PORTAL",
+    "title": "2027年拟在江苏招生的普通高校专业选考科目要求查询系统",
+    "publisher": "江苏省教育考试院",
+    "url": "https://gk.jseea.cn:5443/xkcx/",
+    "publishedAt": "2025-02-20",
+    "checkedAt": "2026-11-25",
+    "sha256": "online-query-portal",
+    "usageNote": "官方在线查询入口，可按院校、专业、考生选考科目或高校选科要求精确检索。"
+  },
+  {
+    "id": "S02",
+    "title": "本科专业选考科目要求在哪里看",
+    "publisher": "中华人民共和国教育部",
+    "url": "https://www.moe.gov.cn/jyb_xwfb/xw_zt/moe_357/2025/2025_zt10/wd/gkwd_zlhz/202506/t20250604_1192961.html",
+    "publishedAt": "2025-06-04",
+    "checkedAt": "2026-11-25",
+    "sha256": "pending-raw-archive-hash",
+    "usageNote": "提示从本省教育考试院查询对应年份选考科目要求，不构成其他年份规则的证据。"
+  }
+]

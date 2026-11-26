@@ -1,0 +1,161 @@
+.picker-grid {
+  display: flex;
+  gap: 20rpx;
+}
+
+.picker-box {
+  flex: 1;
+  background-color: #F8FAFC;
+  border: 1rpx solid #D7DEEA;
+  border-radius: 16rpx;
+  padding: 20rpx;
+}
+
+.picker-val {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: max(32rpx, 16px);
+  font-weight: 600;
+  color: #172033;
+  margin-top: 8rpx;
+}
+
+.picker-arrow {
+  color: #2457D6;
+}
+
+.unsupported-box,
+.ref-box {
+  margin-top: 20rpx;
+  margin-bottom: 0;
+}
+
+.unsupported-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+
+.small-btn {
+  flex: 1;
+  min-height: 76rpx;
+}
+
+.ref-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+
+.choice-pill {
+  padding: 12rpx 22rpx;
+  border-radius: 16rpx;
+  border: 2rpx solid #D7DEEA;
+  background-color: #FFFFFF;
+  color: #172033;
+  font-size: max(28rpx, 14px);
+}
+
+.choice-active {
+  border-color: #2457D6;
+  background-color: #EDF2FF;
+  color: #2457D6;
+  font-weight: 600;
+}
+
+.progress-text {
+  font-size: max(28rpx, 14px);
+  color: #2457D6;
+  font-weight: 500;
+}
+
+.section-desc {
+  margin-bottom: 16rpx;
+}
+
+.optional-tag {
+  margin-left: 12rpx;
+}
+
+.toggle-link {
+  color: #2457D6;
+  font-size: max(28rpx, 14px);
+  font-weight: 500;
+  padding: 8rpx 12rpx;
+}
+
+.interest-list {
+  margin-top: 16rpx;
+}
+
+.major-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+
+.major-chip {
+  min-height: 76rpx;
+  padding: 14rpx 24rpx;
+  border-radius: 16rpx;
+  border: 2rpx solid #D7DEEA;
+  background-color: #FFFFFF;
+  color: #172033;
+  font-size: max(28rpx, 14px);
+  display: inline-flex;
+  align-items: center;
+}
+
+.major-chip-active {
+  border-color: #2457D6;
+  background-color: #EDF2FF;
+  color: #2457D6;
+  font-weight: 600;
+}
+
+.preserve-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-top: 24rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #E5EAF2;
+}
+
+.preserve-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.school-panel {
+  margin-top: 12rpx;
+}
+
+.combo-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 20rpx;
+}
+
+.combo-toggle {
+  padding: 12rpx 20rpx;
+  border-radius: 14rpx;
+  border: 2rpx solid #D7DEEA;
+  font-size: max(26rpx, 13px);
+  color: #172033;
+  background-color: #FFFFFF;
+}
+
+.combo-toggle-active {
+  border-color: #2457D6;
+  background-color: #EDF2FF;
+  color: #2457D6;
+  font-weight: 500;
+}

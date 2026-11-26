@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "方法与设置",
+  "usingComponents": {
+    "source-block": "/components/source-block/index"
+  }
+}

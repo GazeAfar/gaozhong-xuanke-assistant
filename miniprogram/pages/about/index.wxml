@@ -1,0 +1,83 @@
+<view class="page-container">
+  <view class="card">
+    <view class="card-title">产品说明</view>
+    <view class="body-text para">
+      高中选科助手是一款面向高中生家庭的免费选科比较工具，帮助家长和孩子在短时间内梳理候选组合、了解推荐依据和专业选科条件。
+    </view>
+    <view class="secondary-text">
+      核心测算、全部 12 组建议、组合比较、专业查询与本机记录均为免费功能，无广告解锁门槛。
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">推荐依据与使用限制</view>
+    <view class="body-text para">
+      1. 组合排序依据你填写的六科学习优势（如填写全部六科兴趣，则会结合优势与兴趣共同参考），仅作为家庭讨论的启发式比较，不代表高考成绩预测、录取概率或心理测量结论。
+    </view>
+    <view class="body-text para">
+      2. 标记为「还不了解」的科目不会当作差科。若已知科目不足 4 门，工具不会强行排出名次，而是先提示需要补充的科目。
+    </view>
+    <view class="body-text">
+      3. 专业选科条件以各省教育考试院当年正式公布的招生计划为准；跨年份或演示样例资料仅作参考，最终决策请结合学生意愿、学校开班情况与官方文件。
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">官方数据来源</view>
+    <source-block wx:for="{{sources}}" wx:key="id" source="{{item}}" />
+  </view>
+
+  <view class="card">
+    <view class="card-title">隐私与本机数据管理</view>
+    <view class="secondary-text para">
+      本工具无需注册登录，不收集孩子姓名、学校、成绩单或电话。你的填写草稿与历史报告仅保存在当前设备中。
+    </view>
+    <view class="row-between setting-row">
+      <view class="setting-info">
+        <text class="body-text">允许匿名基础体验统计</text>
+        <text class="source-text">默认关闭；开启后仅记录页面访问与耗时区间，不上传任何填写内容</text>
+      </view>
+      <switch checked="{{analyticsOptIn}}" color="#2457D6" bindchange="onToggleAnalytics" />
+    </view>
+    <button class="btn-secondary danger-btn" bindtap="onClearLocalData">清除全部本机草稿与记录</button>
+  </view>
+
+  <view class="card" id="feedback-section">
+    <view class="card-title">意见与资料纠错</view>
+    <view class="secondary-text para">
+      请勿在反馈中填写孩子姓名、学校、成绩或联系电话（10 至 500 字）。
+    </view>
+    <view class="source-text para" wx:if="{{offeringId}}">
+      关联条目：{{offeringId}}（版本 {{datasetVersion}}）
+    </view>
+
+    <picker
+      mode="selector"
+      range="{{categories}}"
+      range-key="label"
+      value="{{categoryIndex}}"
+      bindchange="onCategoryChange"
+    >
+      <view class="picker-field">
+        <text class="secondary-text">反馈类型：</text>
+        <text class="picker-text">{{categories[categoryIndex].label}} ▾</text>
+      </view>
+    </picker>
+
+    <textarea
+      class="feedback-textarea"
+      placeholder="请描述遇到的问题或需要核对的资料内容（至少 10 字）"
+      value="{{message}}"
+      maxlength="500"
+      bindinput="onMessageInput"
+    />
+
+    <button
+      class="btn-primary {{submitting ? 'btn-primary-disabled' : ''}}"
+      disabled="{{submitting}}"
+      bindtap="onSubmitFeedback"
+    >
+      {{submitting ? '正在提交...' : '提交反馈'}}
+    </button>
+  </view>
+</view>

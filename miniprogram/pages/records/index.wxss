@@ -1,0 +1,57 @@
+.header-bar {
+  margin-bottom: 16rpx;
+}
+
+.clear-all-link {
+  color: #B42318;
+  font-size: max(28rpx, 14px);
+  padding: 8rpx 12rpx;
+}
+
+.record-card {
+  padding: 28rpx 32rpx;
+}
+
+.record-meta {
+  font-size: max(28rpx, 14px);
+  color: #2457D6;
+  font-weight: 500;
+}
+
+.record-headline {
+  font-size: max(32rpx, 16px);
+  font-weight: 600;
+  color: #172033;
+  margin: 12rpx 0 8rpx;
+}
+
+.record-actions {
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #E5EAF2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.open-link {
+  color: #2457D6;
+  font-size: max(28rpx, 14px);
+  font-weight: 500;
+}
+
+.delete-link {
+  color: #B42318;
+  font-size: max(28rpx, 14px);
+}
+
+.footer-card {
+  padding: 24rpx 32rpx;
+}
+
+.about-link {
+  margin-top: 14rpx;
+  color: #2457D6;
+  font-size: max(28rpx, 14px);
+  font-weight: 500;
+}

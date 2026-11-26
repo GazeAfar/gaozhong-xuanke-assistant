@@ -1,0 +1,42 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/assessment/index",
+    "pages/report/index",
+    "pages/compare/index",
+    "pages/combinations/index",
+    "pages/majors/index",
+    "pages/major-detail/index",
+    "pages/records/index",
+    "pages/about/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "高中选科助手",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F6F7FB",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#4B5563",
+    "selectedColor": "#2457D6",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "测一测"
+      },
+      {
+        "pagePath": "pages/majors/index",
+        "text": "查专业"
+      },
+      {
+        "pagePath": "pages/records/index",
+        "text": "我的记录"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

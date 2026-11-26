@@ -1,0 +1,7 @@
+<view class="source-box">
+  <view class="source-title">{{source.title}}</view>
+  <view class="source-meta">发布机构：{{source.publisher}}</view>
+  <view class="source-meta">发布日期：{{source.publishedAt}} · 核查日期：{{source.checkedAt}}</view>
+  <view class="source-note" wx:if="{{source.usageNote}}">{{source.usageNote}}</view>
+  <view class="copy-btn" wx:if="{{source.url}}" bindtap="onCopyUrl">复制原文链接</view>
+</view>

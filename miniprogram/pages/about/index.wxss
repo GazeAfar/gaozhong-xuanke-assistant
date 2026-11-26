@@ -1,0 +1,52 @@
+.para {
+  margin-bottom: 16rpx;
+}
+
+.setting-row {
+  padding: 20rpx 0;
+  border-top: 1rpx solid #E5EAF2;
+  border-bottom: 1rpx solid #E5EAF2;
+  margin-bottom: 24rpx;
+  gap: 16rpx;
+}
+
+.setting-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.danger-btn {
+  border-color: #B42318;
+  color: #B42318;
+}
+
+.picker-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 24rpx;
+  background-color: #F8FAFC;
+  border: 1rpx solid #D7DEEA;
+  border-radius: 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.picker-text {
+  color: #2457D6;
+  font-size: max(28rpx, 14px);
+  font-weight: 500;
+}
+
+.feedback-textarea {
+  width: 100%;
+  min-height: 200rpx;
+  padding: 20rpx;
+  background-color: #F8FAFC;
+  border: 1rpx solid #D7DEEA;
+  border-radius: 16rpx;
+  font-size: max(28rpx, 14px);
+  color: #172033;
+  margin-bottom: 20rpx;
+}

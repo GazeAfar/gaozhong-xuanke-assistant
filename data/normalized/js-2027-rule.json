@@ -1,0 +1,12 @@
+{
+  "provinceCode": "JS",
+  "provinceName": "江苏",
+  "mode": "3+1+2",
+  "applicableYears": [2027],
+  "firstSubjects": ["PHYSICS", "HISTORY"],
+  "electiveSubjects": ["CHEMISTRY", "BIOLOGY", "POLITICS", "GEOGRAPHY"],
+  "electivePickCount": 2,
+  "version": "JS-2027.1",
+  "status": "published",
+  "sourceId": "S01"
+}
