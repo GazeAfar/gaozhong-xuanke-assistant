@@ -1,5 +1,5 @@
 [Unit]
-Description=Gaozhong Xuanke Assistant API Server
+Description=Gaozhong Xuanke Assistant Web Server
 After=network.target
 
 [Service]
@@ -7,6 +7,7 @@ Type=simple
 WorkingDirectory=/opt/gaozhong-xuanke-assistant
 Environment=HOST=127.0.0.1
 Environment=PORT=3000
+Environment=SITE_URL=https://xuanke.visc.cn
 ExecStart=/usr/bin/node /opt/gaozhong-xuanke-assistant/server/index.mjs
 Restart=always
 RestartSec=3
