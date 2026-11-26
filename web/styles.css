@@ -2746,6 +2746,15 @@ summary:focus:not(:focus-visible) {
     gap: 8px;
   }
 
+  .guide-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .guide-head .btn,
+  .section-header > .btn,
+  .pager-bar .btn,
   .exam-list-header .btn,
   .submit-bar,
   .submit-actions,
