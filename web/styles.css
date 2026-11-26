@@ -1860,6 +1860,60 @@ summary:focus:not(:focus-visible) {
   color: var(--muted);
 }
 
+.combo-links-block {
+  padding: 22px 0;
+  border-top: 1px solid var(--border);
+}
+
+.combo-links-block h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.combo-links-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.combo-link-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 11px 13px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-subtle);
+  text-decoration: none;
+  transition: border-color 150ms var(--ease-out), background-color 150ms var(--ease-out);
+}
+
+.combo-link-card:hover {
+  background: var(--primary-soft);
+  border-color: var(--primary-border);
+}
+
+.combo-link-card strong {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.combo-link-card:hover strong {
+  color: var(--primary-ink);
+}
+
+.combo-link-card span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+@media (max-width: 960px) {
+  .combo-links-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .faq-block {
   padding-top: 22px;
   border-top: 1px solid var(--border);
