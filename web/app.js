@@ -106,6 +106,53 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+function formatComboOptionLabel(displayName, pct) {
+  const compact = String(displayName || '')
+    .replace(/\s*·\s*/g, '·')
+    .replace(/生物学/g, '生物')
+    .replace(/思想政治/g, '政治');
+  if (pct !== undefined && pct !== null && pct !== '') {
+    return `${compact} ${pct}%`;
+  }
+  return compact;
+}
+
+function sanitizeDecimalInput(raw) {
+  const normalized = String(raw ?? '').replace(/[。．,，]/g, '.').replace(/[^\d.]/g, '');
+  const dotIdx = normalized.indexOf('.');
+  if (dotIdx === -1) return normalized;
+  const intPart = normalized.slice(0, dotIdx);
+  const decPart = normalized.slice(dotIdx + 1).replace(/\./g, '').slice(0, 2);
+  return `${intPart}.${decPart}`;
+}
+
+function calcExamEnteredSum(exam) {
+  let sum = 0;
+  let count = 0;
+  for (const c of CORE_SUBJECTS) {
+    const raw = String(exam?.coreSubjects?.[c.code]?.score ?? '').trim();
+    if (raw !== '' && !Number.isNaN(Number(raw))) {
+      sum += Number(raw);
+      count += 1;
+    }
+  }
+  for (const s of SUBJECTS) {
+    const raw = String(exam?.subjects?.[s.code]?.score ?? '').trim();
+    if (raw !== '' && !Number.isNaN(Number(raw))) {
+      sum += Number(raw);
+      count += 1;
+    }
+  }
+  if (count === 0) return null;
+  return { sum: Math.round(sum * 100) / 100, count };
+}
+
+function formatExamSumHint(exam) {
+  const res = calcExamEnteredSum(exam);
+  if (!res) return '';
+  return `已填 ${res.count} 科合计 ${res.sum} 分`;
+}
+
 function createEmptyExam(index) {
   const coreSubjects = {};
   for (const c of CORE_SUBJECTS) {
@@ -121,6 +168,9 @@ function createEmptyExam(index) {
     type: index === 0 ? '月考' : '期末考试',
     classSize: '',
     gradeSize: '',
+    totalScore: '',
+    totalClassRank: '',
+    totalGradeRank: '',
     coreSubjects,
     subjects,
   };
@@ -170,9 +220,13 @@ function saveState(manual = false) {
 
 function hasAnyEnteredScore(exams) {
   return (exams || []).some((exam) => {
+    const totalFilled =
+      String(exam.totalScore ?? '').trim() !== '' ||
+      String(exam.totalClassRank ?? '').trim() !== '' ||
+      String(exam.totalGradeRank ?? '').trim() !== '';
     const coreFilled = Object.values(exam.coreSubjects || {}).some((v) => String(v?.score ?? '').trim() !== '');
     const subjFilled = Object.values(exam.subjects || {}).some((v) => String(v?.score ?? '').trim() !== '');
-    return coreFilled || subjFilled;
+    return totalFilled || coreFilled || subjFilled;
   });
 }
 
@@ -256,7 +310,7 @@ async function initApp() {
   const comboSelect = document.getElementById('major-combo-filter');
   if (comboSelect && comboSelect.options.length === 0) {
     comboSelect.innerHTML = DEFAULT_COMBOS.map(
-      (c) => `<option value="${c.id}">${escapeHtml(c.displayName)}</option>`
+      (c) => `<option value="${c.id}">${escapeHtml(formatComboOptionLabel(c.displayName))}</option>`
     ).join('');
     comboSelect.value = 'P_CG';
   }
@@ -322,12 +376,11 @@ function renderExams() {
           <div class="subj-cell-title">${escapeHtml(c.name)}</div>
           <div class="subj-inputs">
             <input
-              type="number"
+              type="text"
               inputmode="decimal"
-              min="0"
-              max="150"
-              step="0.5"
-              placeholder="分数 (0-150)"
+              autocomplete="off"
+              class="score-input"
+              placeholder="分数 (0-150，支持小数)"
               value="${escapeHtml(cell.score)}"
               data-exam-idx="${idx}"
               data-core="${c.code}"
@@ -336,6 +389,7 @@ function renderExams() {
             <div class="subj-rank-pair">
               <input
                 type="number"
+                inputmode="numeric"
                 min="1"
                 step="1"
                 placeholder="班级排名"
@@ -346,6 +400,7 @@ function renderExams() {
               />
               <input
                 type="number"
+                inputmode="numeric"
                 min="1"
                 step="1"
                 placeholder="年级排名"
@@ -367,12 +422,11 @@ function renderExams() {
           <div class="subj-cell-title">${escapeHtml(s.name)}</div>
           <div class="subj-inputs">
             <input
-              type="number"
+              type="text"
               inputmode="decimal"
-              min="0"
-              max="100"
-              step="0.5"
-              placeholder="分数 (0-100)"
+              autocomplete="off"
+              class="score-input"
+              placeholder="分数 (0-100，支持小数)"
               value="${escapeHtml(cell.score)}"
               data-exam-idx="${idx}"
               data-subj="${s.code}"
@@ -381,6 +435,7 @@ function renderExams() {
             <div class="subj-rank-pair">
               <input
                 type="number"
+                inputmode="numeric"
                 min="1"
                 step="1"
                 placeholder="班级排名"
@@ -391,6 +446,7 @@ function renderExams() {
               />
               <input
                 type="number"
+                inputmode="numeric"
                 min="1"
                 step="1"
                 placeholder="年级排名"
@@ -404,6 +460,8 @@ function renderExams() {
         </div>
       `;
     }).join('');
+
+    const sumHintText = formatExamSumHint(exam);
 
     card.innerHTML = `
       <div class="exam-card-topbar">
@@ -426,11 +484,11 @@ function renderExams() {
         </button>
       </div>
       <div class="exam-card-head">
-        <label class="field">
+        <label class="field field-exam-name">
           <span class="field-label">考试名称</span>
           <input type="text" value="${escapeHtml(exam.name)}" data-exam-idx="${idx}" data-meta="name" placeholder="例如：高一上期中考试" />
         </label>
-        <label class="field">
+        <label class="field field-exam-type">
           <span class="field-label">考试类型</span>
           <select data-exam-idx="${idx}" data-meta="type">
             <option value="月考" ${exam.type === '月考' ? 'selected' : ''}>月考</option>
@@ -441,12 +499,32 @@ function renderExams() {
         </label>
         <label class="field">
           <span class="field-label">班级人数</span>
-          <input type="number" min="1" step="1" value="${escapeHtml(exam.classSize ?? '')}" data-exam-idx="${idx}" data-meta="classSize" placeholder="如：47" />
+          <input type="number" inputmode="numeric" min="1" step="1" value="${escapeHtml(exam.classSize ?? '')}" data-exam-idx="${idx}" data-meta="classSize" placeholder="如：47" />
         </label>
         <label class="field">
           <span class="field-label">年级人数</span>
-          <input type="number" min="1" step="1" value="${escapeHtml(exam.gradeSize ?? '')}" data-exam-idx="${idx}" data-meta="gradeSize" placeholder="如：600" />
+          <input type="number" inputmode="numeric" min="1" step="1" value="${escapeHtml(exam.gradeSize ?? '')}" data-exam-idx="${idx}" data-meta="gradeSize" placeholder="如：600" />
         </label>
+      </div>
+      <div class="exam-total-band">
+        <div class="exam-total-head">
+          <span class="exam-total-title">本次考试总分与总排名（可选）</span>
+          <span class="exam-sum-hint" data-sum-hint="${idx}">${escapeHtml(sumHintText)}</span>
+        </div>
+        <div class="exam-total-grid">
+          <label class="field field-total-score">
+            <span class="field-label">考试总分</span>
+            <input type="text" inputmode="decimal" autocomplete="off" class="score-input" value="${escapeHtml(exam.totalScore ?? '')}" data-exam-idx="${idx}" data-meta="totalScore" placeholder="如：840.5（支持小数）" />
+          </label>
+          <label class="field">
+            <span class="field-label">总分班级排名</span>
+            <input type="number" inputmode="numeric" min="1" step="1" value="${escapeHtml(exam.totalClassRank ?? '')}" data-exam-idx="${idx}" data-meta="totalClassRank" placeholder="如：8" />
+          </label>
+          <label class="field">
+            <span class="field-label">总分年级排名</span>
+            <input type="number" inputmode="numeric" min="1" step="1" value="${escapeHtml(exam.totalGradeRank ?? '')}" data-exam-idx="${idx}" data-meta="totalGradeRank" placeholder="如：85" />
+          </label>
+        </div>
       </div>
       <div class="subj-group-label">统考主科</div>
       <div class="core-subjects-grid">${coreHtml}</div>
@@ -681,13 +759,16 @@ function renderReport(data) {
                 <h3 class="rec-name">${escapeHtml(rec.displayName)}</h3>
                 <span class="pill ${badgeClass}">${badgePrefix}${escapeHtml(rec.badge)}</span>
               </div>
-              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <div class="rec-summary-right">
                 <div class="rec-score-box">
                   <span class="metric-chip metric-blue">实力 <strong>${rec.academicScore}</strong></span>
                   <span class="metric-chip metric-green">本科 <strong>${stats.undergradCoveragePct}%</strong></span>
                   <span class="metric-chip metric-purple">综合 <strong>${rec.compositeScore}</strong></span>
                 </div>
-                <span class="rec-toggle-icon no-print" title="展开/收起" aria-hidden="true">▾</span>
+                <span class="rec-toggle-btn no-print" aria-hidden="true">
+                  <span class="toggle-text-expand">展开详情 ▾</span>
+                  <span class="toggle-text-collapse">收起详情 ▴</span>
+                </span>
               </div>
             </div>
             ${diffPreviewHtml}
@@ -700,23 +781,29 @@ function renderReport(data) {
             </div>
 
             <div class="reason-block reason-block-majors">
-              <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap;">
+              <div class="reason-block-head">
                 <h4 style="margin:0;"><span class="sec-tag sec-tag-green">原因 1</span> 可报考专业</h4>
-                <button type="button" class="btn btn-secondary no-print" data-explore-combo="${rec.id}">查具体院校 →</button>
+                <button type="button" class="btn btn-secondary btn-sm no-print" data-explore-combo="${rec.id}">查具体院校 →</button>
               </div>
               <div class="coverage-row">
                 <div class="coverage-stat">
                   <div class="hint">本科可报</div>
-                  <div class="coverage-num">${stats.eligibleUndergrad.toLocaleString()} / ${stats.totalUndergrad.toLocaleString()}（${stats.undergradCoveragePct}%）</div>
+                  <div class="coverage-num">
+                    <span class="coverage-count">${stats.eligibleUndergrad.toLocaleString()} / ${stats.totalUndergrad.toLocaleString()}</span>
+                    <span class="coverage-pct">${stats.undergradCoveragePct}%</span>
+                  </div>
                   <div class="progress-track"><div class="progress-fill ${stats.undergradCoveragePct >= 80 ? '' : stats.undergradCoveragePct >= 55 ? 'progress-fill-blue' : 'progress-fill-amber'}" style="width:${Math.min(100, stats.undergradCoveragePct)}%"></div></div>
                 </div>
                 <div class="coverage-stat">
                   <div class="hint">专科可报</div>
-                  <div class="coverage-num" style="color:#1d4ed8;">${stats.eligibleVocational.toLocaleString()} / ${stats.totalVocational.toLocaleString()}（${stats.vocationalCoveragePct}%）</div>
+                  <div class="coverage-num coverage-num-blue">
+                    <span class="coverage-count">${stats.eligibleVocational.toLocaleString()} / ${stats.totalVocational.toLocaleString()}</span>
+                    <span class="coverage-pct">${stats.vocationalCoveragePct}%</span>
+                  </div>
                   <div class="progress-track"><div class="progress-fill progress-fill-blue" style="width:${Math.min(100, stats.vocationalCoveragePct)}%"></div></div>
                 </div>
               </div>
-              <div class="hint" style="margin-bottom:6px;font-weight:600;color:#0f172a;">主要可报大类</div>
+              <div class="sub-block-title">主要可报大类</div>
               <div class="track-grid">${strongTracksHtml}</div>
               <div class="restricted-callout"><strong>⚠ 受限方向：</strong>${escapeHtml(restrictedText)}</div>
             </div>
@@ -764,6 +851,39 @@ function renderReport(data) {
   const sourceLine = (sources || [])
     .map((s) => `${s.title}（${s.publisher}，${s.publishedAt}）`)
     .join('；');
+
+  const examTotal = report.examTotalProfile;
+  const examTotalSectionHtml = examTotal?.hasData
+    ? `
+    <section class="doc-section">
+      <h3 class="doc-h3">考试总分与排名概况</h3>
+      <div class="total-overview-grid">
+        <div class="profile-item profile-item-strong">
+          <div class="profile-head">
+            <span class="profile-subj">加权总分</span>
+            ${renderTrendBadge(examTotal.trend)}
+          </div>
+          <div class="profile-score-big">${examTotal.avgScore !== null ? `${examTotal.avgScore} <small>分</small>` : '<span style="color:var(--muted);">未录入</span>'}</div>
+          ${examTotal.latestScore !== null ? `<div class="profile-val">最近一次：<strong>${examTotal.latestScore}</strong> 分</div>` : ''}
+        </div>
+        <div class="profile-item">
+          <div class="profile-head">
+            <span class="profile-subj">总分班级排名</span>
+          </div>
+          <div class="profile-score-big" style="color:var(--info);">${examTotal.latestClassRank !== null ? `第 ${examTotal.latestClassRank} <small>名</small>` : '<span style="color:var(--muted);">未录入</span>'}</div>
+          ${examTotal.avgClassTopPct !== null ? `<div class="profile-val">班排位置：前 <strong>${examTotal.avgClassTopPct}%</strong></div>` : '<div class="profile-val">填写班级人数后可换算百分位</div>'}
+        </div>
+        <div class="profile-item">
+          <div class="profile-head">
+            <span class="profile-subj">总分年级排名</span>
+          </div>
+          <div class="profile-score-big" style="color:var(--purple);">${examTotal.latestGradeRank !== null ? `第 ${examTotal.latestGradeRank} <small>名</small>` : '<span style="color:var(--muted);">未录入</span>'}</div>
+          ${examTotal.avgGradeTopPct !== null ? `<div class="profile-val">年排位置：前 <strong>${examTotal.avgGradeTopPct}%</strong></div>` : '<div class="profile-val">填写年级人数后可换算百分位</div>'}
+        </div>
+      </div>
+    </section>
+  `
+    : '';
 
   const hasCoreData = (report.coreProfiles || []).some((p) => p.hasData);
   const coreSectionHtml = hasCoreData
@@ -844,6 +964,8 @@ function renderReport(data) {
         <p class="hint" style="margin-top:10px;">${escapeHtml(careerOutlook.disclaimer)}</p>
       </section>
 
+      ${examTotalSectionHtml}
+
       ${coreSectionHtml}
 
       <section class="doc-section">
@@ -871,6 +993,7 @@ function renderReport(data) {
         </div>
         <button type="button" class="btn btn-secondary no-print" id="btn-back-report">← 返回白皮书</button>
       </div>
+      <div class="mobile-scroll-hint no-print">← 左右滑动查看完整表格 →</div>
       <div class="table-wrap">
         <table class="data-table">
           <thead>
@@ -921,7 +1044,7 @@ function renderReport(data) {
   // 初始化底部官方 79,753 条院校专业查询区
   const comboSelect = document.getElementById('major-combo-filter');
   comboSelect.innerHTML = report.allCombinations
-    .map((c) => `<option value="${c.id}">${escapeHtml(c.displayName)}（本科 ${c.majorStats.undergradCoveragePct}%）</option>`)
+    .map((c) => `<option value="${c.id}">${escapeHtml(formatComboOptionLabel(c.displayName, c.majorStats.undergradCoveragePct))}</option>`)
     .join('');
   if (report.recommendations[0]) {
     comboSelect.value = report.recommendations[0].id;
@@ -1085,9 +1208,19 @@ function bindEvents() {
     const idx = Number(target.getAttribute('data-exam-idx'));
     if (Number.isNaN(idx) || !state.exams[idx]) return;
 
+    const updateSumHint = () => {
+      const hintEl = document.querySelector(`[data-sum-hint="${idx}"]`);
+      if (hintEl) hintEl.textContent = formatExamSumHint(state.exams[idx]);
+    };
+
     const meta = target.getAttribute('data-meta');
     if (meta) {
-      state.exams[idx][meta] = target.value;
+      let val = target.value;
+      if (meta === 'totalScore') {
+        val = sanitizeDecimalInput(val);
+        if (val !== target.value) target.value = val;
+      }
+      state.exams[idx][meta] = val;
       saveState();
       return;
     }
@@ -1099,9 +1232,15 @@ function bindEvents() {
         state.exams[idx].coreSubjects = {};
       }
       if (!state.exams[idx].coreSubjects[coreCode]) {
-        state.exams[idx].coreSubjects[coreCode] = { score: '', rank: '' };
+        state.exams[idx].coreSubjects[coreCode] = { score: '', classRank: '', gradeRank: '' };
       }
-      state.exams[idx].coreSubjects[coreCode][field] = target.value;
+      let val = target.value;
+      if (field === 'score') {
+        val = sanitizeDecimalInput(val);
+        if (val !== target.value) target.value = val;
+      }
+      state.exams[idx].coreSubjects[coreCode][field] = val;
+      if (field === 'score') updateSumHint();
       saveState();
       return;
     }
@@ -1109,9 +1248,15 @@ function bindEvents() {
     const subj = target.getAttribute('data-subj');
     if (subj && field) {
       if (!state.exams[idx].subjects[subj]) {
-        state.exams[idx].subjects[subj] = { score: '', rank: '' };
+        state.exams[idx].subjects[subj] = { score: '', classRank: '', gradeRank: '' };
       }
-      state.exams[idx].subjects[subj][field] = target.value;
+      let val = target.value;
+      if (field === 'score') {
+        val = sanitizeDecimalInput(val);
+        if (val !== target.value) target.value = val;
+      }
+      state.exams[idx].subjects[subj][field] = val;
+      if (field === 'score') updateSumHint();
       saveState();
     }
   });
@@ -1136,11 +1281,17 @@ function bindEvents() {
     updateSaveStatus(`✓ 已删除「${examName}」（删除前已自动暂存，可点「恢复暂存」找回）`);
   });
 
-  document.getElementById('btn-add-exam').addEventListener('click', () => {
+  const addExamAndScroll = () => {
     state.exams.push(createEmptyExam(state.exams.length));
     saveState();
     renderExams();
-  });
+    const cards = document.querySelectorAll('#exams-container .exam-card');
+    const newest = cards[cards.length - 1];
+    newest?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  document.getElementById('btn-add-exam')?.addEventListener('click', addExamAndScroll);
+  document.getElementById('btn-add-exam-bottom')?.addEventListener('click', addExamAndScroll);
 
   document.getElementById('btn-restore-snapshot')?.addEventListener('click', restoreSnapshot);
 
@@ -1166,8 +1317,11 @@ function bindEvents() {
         type: '月考',
         classSize: '47',
         gradeSize: '600',
+        totalScore: '830.5',
+        totalClassRank: '9',
+        totalGradeRank: '88',
         coreSubjects: {
-          CHINESE: { score: '112', classRank: '12', gradeRank: '110' },
+          CHINESE: { score: '112.5', classRank: '12', gradeRank: '110' },
           MATH: { score: '126', classRank: '6', gradeRank: '58' },
           ENGLISH: { score: '122', classRank: '8', gradeRank: '74' },
         },
@@ -1186,8 +1340,11 @@ function bindEvents() {
         type: '期末考试',
         classSize: '47',
         gradeSize: '600',
+        totalScore: '851.5',
+        totalClassRank: '6',
+        totalGradeRank: '58',
         coreSubjects: {
-          CHINESE: { score: '115', classRank: '10', gradeRank: '96' },
+          CHINESE: { score: '115.5', classRank: '10', gradeRank: '96' },
           MATH: { score: '131', classRank: '4', gradeRank: '42' },
           ENGLISH: { score: '125', classRank: '6', gradeRank: '62' },
         },

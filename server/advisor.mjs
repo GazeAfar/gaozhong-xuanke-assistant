@@ -332,6 +332,115 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
     ? round1(coreProfiles.reduce((s, p) => s + p.avgScore, 0))
     : null;
 
+  // 1.5 聚合每次考试的总分与总分班级/年级排名（可选录入）
+  const totalScorePoints = [];
+  const totalClassRankPoints = [];
+  const totalClassPctPoints = [];
+  const totalGradeRankPoints = [];
+  const totalGradePctPoints = [];
+
+  exams.forEach((ex, idx) => {
+    const weight = 1 + idx * 0.15;
+    const classSize = Number(ex.classSize) > 0 ? Number(ex.classSize) : null;
+    const gradeSize =
+      Number(ex.gradeSize) > 0
+        ? Number(ex.gradeSize)
+        : Number(ex.totalStudents) > 0
+        ? Number(ex.totalStudents)
+        : null;
+
+    if (
+      ex.totalScore !== '' &&
+      ex.totalScore !== null &&
+      ex.totalScore !== undefined &&
+      !Number.isNaN(Number(ex.totalScore))
+    ) {
+      const ts = Number(ex.totalScore);
+      if (ts >= 0 && ts <= 1500) {
+        totalScorePoints.push({ raw: ts, weight, examName: ex.name || `第${idx + 1}次考试` });
+      }
+    }
+
+    if (
+      ex.totalClassRank !== '' &&
+      ex.totalClassRank !== null &&
+      ex.totalClassRank !== undefined &&
+      !Number.isNaN(Number(ex.totalClassRank))
+    ) {
+      const r = Number(ex.totalClassRank);
+      if (r >= 1) {
+        totalClassRankPoints.push({ rank: r, weight });
+        if (classSize && r <= classSize) {
+          totalClassPctPoints.push({ topPct: (r / classSize) * 100, weight });
+        }
+      }
+    }
+
+    if (
+      ex.totalGradeRank !== '' &&
+      ex.totalGradeRank !== null &&
+      ex.totalGradeRank !== undefined &&
+      !Number.isNaN(Number(ex.totalGradeRank))
+    ) {
+      const r = Number(ex.totalGradeRank);
+      if (r >= 1) {
+        totalGradeRankPoints.push({ rank: r, weight });
+        if (gradeSize && r <= gradeSize) {
+          totalGradePctPoints.push({ topPct: (r / gradeSize) * 100, weight });
+        }
+      }
+    }
+  });
+
+  let totalAvgScore = null;
+  let totalLatestScore = null;
+  let totalTrend = '数据不足';
+  if (totalScorePoints.length > 0) {
+    const wSum = totalScorePoints.reduce((a, p) => a + p.weight, 0);
+    totalAvgScore = round1(totalScorePoints.reduce((a, p) => a + p.raw * p.weight, 0) / wSum);
+    totalLatestScore = round1(totalScorePoints[totalScorePoints.length - 1].raw);
+    if (totalScorePoints.length >= 2) {
+      const delta = totalScorePoints[totalScorePoints.length - 1].raw - totalScorePoints[0].raw;
+      if (delta >= 15) totalTrend = '明显上升';
+      else if (delta <= -15) totalTrend = '有所下滑';
+      else totalTrend = '保持稳定';
+    } else {
+      totalTrend = '单次参考';
+    }
+  }
+
+  const examTotalProfile = {
+    hasData:
+      totalScorePoints.length > 0 ||
+      totalClassRankPoints.length > 0 ||
+      totalGradeRankPoints.length > 0,
+    avgScore: totalAvgScore,
+    latestScore: totalLatestScore,
+    latestClassRank:
+      totalClassRankPoints.length > 0
+        ? totalClassRankPoints[totalClassRankPoints.length - 1].rank
+        : null,
+    latestGradeRank:
+      totalGradeRankPoints.length > 0
+        ? totalGradeRankPoints[totalGradeRankPoints.length - 1].rank
+        : null,
+    avgClassTopPct:
+      totalClassPctPoints.length > 0
+        ? round1(
+            totalClassPctPoints.reduce((a, p) => a + p.topPct * p.weight, 0) /
+              totalClassPctPoints.reduce((a, p) => a + p.weight, 0)
+          )
+        : null,
+    avgGradeTopPct:
+      totalGradePctPoints.length > 0
+        ? round1(
+            totalGradePctPoints.reduce((a, p) => a + p.topPct * p.weight, 0) /
+              totalGradePctPoints.reduce((a, p) => a + p.weight, 0)
+          )
+        : null,
+    trend: totalTrend,
+  };
+
   // 2. 逐科聚合多次考试六门选考科目数据（越近的考试权重略高：1.0 -> 1.15 -> 1.3）
   const subjectProfiles = {};
   const knownSubjects = [];
@@ -570,6 +679,7 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
     coreProfiles,
     coreTotalAvg,
     coreInsights,
+    examTotalProfile,
     subjectProfiles: ALL_SUBJECTS.map((s) => subjectProfiles[s]),
     recommendations,
     allCombinations: [...ranked, ...incomplete],
