@@ -1276,6 +1276,11 @@ function bindEvents() {
     if (!confirmed) return;
     saveSnapshot('auto');
     state.exams.splice(idx, 1);
+    state.exams.forEach((ex, i) => {
+      if (/^第\s*\d+\s*次考试$/.test(String(ex.name || '').trim())) {
+        ex.name = `第 ${i + 1} 次考试`;
+      }
+    });
     saveState();
     renderExams();
     updateSaveStatus(`✓ 已删除「${examName}」（删除前已自动暂存，可点「恢复暂存」找回）`);
