@@ -166,6 +166,7 @@ input[type="number"],
   align-items: center;
   gap: 11px;
   min-width: 0;
+  flex-shrink: 0;
 }
 
 .brand-text {
@@ -2369,13 +2370,9 @@ summary:focus:not(:focus-visible) {
   }
 }
 
-@media (max-width: 640px) {
-  .container {
-    padding: 0 12px;
-  }
-
+/* 平板/窄窗/移动端（≤860px）：切换底部 Tab 栏与右上角折叠菜单，彻底避免顶部导航与 Logo 重叠 */
+@media (max-width: 860px) {
   .main-content {
-    padding-top: 14px;
     padding-bottom: calc(82px + env(safe-area-inset-bottom));
   }
 
@@ -2388,13 +2385,15 @@ summary:focus:not(:focus-visible) {
   .topbar-inner {
     flex-wrap: nowrap;
     min-height: 54px;
-    padding: 8px 14px;
-    gap: 8px;
+    padding: 8px 16px;
+    gap: 10px;
   }
 
   .brand {
     gap: 8px;
     flex: 1;
+    flex-shrink: 1;
+    min-width: 0;
   }
 
   .brand-logo-wrap {
@@ -2404,7 +2403,7 @@ summary:focus:not(:focus-visible) {
   }
 
   .topbar h1 {
-    font-size: 15px;
+    font-size: 15.5px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2429,7 +2428,7 @@ summary:focus:not(:focus-visible) {
     display: none !important;
   }
 
-  /* 移动端底部固定 Tab 导航栏（仅用于省份工作台，通用门户/文章页不固定在底部） */
+  /* 底部固定 Tab 导航栏（仅用于省份页面，全国门户/文章页不固定在底部） */
   .main-nav:not(.portal-nav) {
     position: fixed;
     left: 0;
@@ -2476,7 +2475,7 @@ summary:focus:not(:focus-visible) {
     display: none;
   }
 
-  /* 通用首页/专题页移动端：右上角三横线按钮展开下拉导航 */
+  /* 通用首页/专题页与省内右上角三横线按钮展开下拉导航 */
   .topbar:has(.portal-nav) .topbar-inner {
     flex-wrap: wrap;
   }
@@ -2515,6 +2514,25 @@ summary:focus:not(:focus-visible) {
 
   .main-nav.portal-nav .nav-active::after {
     display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0 12px;
+  }
+
+  .main-content {
+    padding-top: 14px;
+  }
+
+  .topbar-inner {
+    padding: 8px 14px;
+    gap: 8px;
+  }
+
+  .topbar h1 {
+    font-size: 15px;
   }
 
   .doc-sheet {
