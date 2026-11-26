@@ -32,7 +32,7 @@
     content="基于官方高校专业选科目录与学生多次成绩排名，免费生成高中选科与就业分析白皮书。"
   />
   <link rel="icon" type="image/jpeg" href="/logo.jpg?v=2" />
-  <link rel="stylesheet" href="/styles.css?v=65" />
+  <link rel="stylesheet" href="/styles.css?v=66" />
   <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-K9LT3P6G"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -497,7 +497,47 @@
     </div>
   </dialog>
 
-  <script src="/app.js?v=44"></script>
+  <dialog id="share-report-dialog" class="confirm-dialog share-dialog" aria-labelledby="share-dialog-title">
+    <div class="confirm-dialog-body share-dialog-body">
+      <div class="confirm-dialog-head">
+        <h3 id="share-dialog-title" class="confirm-dialog-title">分享选科报告</h3>
+        <button type="button" class="confirm-dialog-close" id="share-dialog-close" aria-label="关闭" title="关闭">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="share-tabs" role="tablist">
+        <button type="button" class="share-tab is-active" data-share-tab="poster" role="tab" aria-selected="true">生成报告长图</button>
+        <button type="button" class="share-tab" data-share-tab="link" role="tab" aria-selected="false">复制带成绩链接</button>
+      </div>
+
+      <div id="share-panel-poster" class="share-panel">
+        <p class="share-tip">手机/微信端：<strong>长按下方图片</strong>即可直接「发送给朋友」或「保存到相册」</p>
+        <div class="share-poster-wrap">
+          <div id="share-poster-loading" class="hint" style="padding:24px 0;text-align:center;">正在生成高清报告长图...</div>
+          <img id="share-poster-img" class="share-poster-img hidden" alt="江苏选科分析报告长图" />
+        </div>
+        <div class="share-panel-actions">
+          <button type="button" class="btn btn-primary" id="btn-download-poster">下载高清图片</button>
+          <button type="button" class="btn btn-secondary" id="btn-switch-to-link">改用链接分享</button>
+        </div>
+      </div>
+
+      <div id="share-panel-link" class="share-panel hidden">
+        <p class="share-tip">复制后直接粘贴发到微信群或另一半，对方点开即可<strong>自动带入全部成绩</strong>查看完整报告（成绩仅保存在链接本地片段中，不上传服务器）。</p>
+        <pre id="share-link-preview" class="share-link-preview"></pre>
+        <div id="share-copy-status" class="save-status" style="margin-bottom:10px;min-height:18px;" aria-live="polite"></div>
+        <div class="share-panel-actions">
+          <button type="button" class="btn btn-primary" id="btn-copy-share-bundle">一键复制标题与链接</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="/app.js?v=45"></script>
   <script>
     (function () {
       var btn = document.getElementById('btn-portal-nav-toggle');

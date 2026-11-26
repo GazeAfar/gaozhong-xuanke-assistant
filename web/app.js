@@ -1175,8 +1175,12 @@ function renderReport(data) {
           </div>
           <div class="report-header-actions desktop-only no-print">
             <button type="button" class="btn btn-secondary" id="btn-back-edit">← 修改成绩</button>
+            <button type="button" class="btn btn-secondary" id="btn-share-report">分享报告</button>
             <button type="button" class="btn btn-primary" id="btn-print-inline">导出 PDF</button>
           </div>
+        </div>
+        <div class="report-mobile-share no-print">
+          <button type="button" class="btn btn-primary" id="btn-share-report-mobile">分享报告（生成长图 / 发给家人）</button>
         </div>
       </section>
 
@@ -1258,6 +1262,8 @@ function renderReport(data) {
   document.getElementById('btn-print-top').disabled = false;
 
   document.getElementById('btn-print-inline')?.addEventListener('click', handleExportPdf);
+  document.getElementById('btn-share-report')?.addEventListener('click', openShareModal);
+  document.getElementById('btn-share-report-mobile')?.addEventListener('click', openShareModal);
   document.getElementById('btn-back-edit')?.addEventListener('click', () => switchView('section-input'));
   document.getElementById('btn-back-report')?.addEventListener('click', () => switchView('report-root'));
   document.getElementById('btn-expand-all-recs')?.addEventListener('click', () => {
@@ -1655,6 +1661,476 @@ function bindEvents() {
 
   initMobileSelectSheet();
   initPdfGuideModal();
+  initShareModal();
+}
+
+function buildShareLinkBundle() {
+  const report = state.lastReportData?.report;
+  if (!report) return '';
+  const titlePrefix = report.studentName ? `${report.studentName} · ` : '';
+  const top1 = report.recommendations?.[0];
+  const lines = [
+    `【${titlePrefix}江苏 3+1+2 选科分析报告】`,
+    `${report.examYear}年高考（${report.gradYear}年本科毕业） · 基于 ${report.examCount} 次考试`,
+  ];
+  if (top1) {
+    lines.push(
+      `★ 首选推荐：${top1.displayName}（学科实力 ${top1.academicScore} · 本科可报 ${top1.majorStats?.undergradCoveragePct ?? '-'}%）`
+    );
+  }
+  (report.recommendations || []).slice(1, 3).forEach((rec) => {
+    lines.push(
+      `${rec.rank}. ${rec.displayName}（${rec.badge} · 本科可报 ${rec.majorStats?.undergradCoveragePct ?? '-'}%）`
+    );
+  });
+  lines.push(
+    '',
+    '👉 点击查看完整选科与就业报告（已自动带入成绩，无需重填）：',
+    buildCarryDataUrl()
+  );
+  return lines.join('\n');
+}
+
+function drawRoundedRect(ctx, x, y, w, h, r) {
+  const radius = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.arcTo(x + w, y, x + w, y + h, radius);
+  ctx.arcTo(x + w, y + h, x, y + h, radius);
+  ctx.arcTo(x, y + h, x, y, radius);
+  ctx.arcTo(x, y, x + w, y, radius);
+  ctx.closePath();
+}
+
+function wrapCanvasLines(ctx, text, maxWidth) {
+  const chars = Array.from(String(text || ''));
+  const lines = [];
+  let line = '';
+  for (const ch of chars) {
+    const test = line + ch;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      lines.push(line);
+      line = ch;
+    } else {
+      line = test;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function loadLogoImage() {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = '/logo.jpg?v=2';
+  });
+}
+
+async function generateSharePosterDataUrl() {
+  const data = state.lastReportData;
+  if (!data?.report) return null;
+  const { report, datasetStats } = data;
+  const logoImg = await loadLogoImage();
+
+  const W = 750;
+  const PAD = 32;
+  const INNER_W = W - PAD * 2;
+  const SCALE = 2;
+  const FONT = '-apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif';
+
+  // 测量用离屏上下文，精准计算总高度
+  const measureCanvas = document.createElement('canvas');
+  const mctx = measureCanvas.getContext('2d');
+  const top1 = report.recommendations?.[0];
+  const top1Tracks = (top1?.majorStats?.strongTracks || []).slice(0, 4).map((t) => t.label.split(' / ')[0]).join('、');
+  const top1Summary = top1
+    ? `本科可报 ${top1.majorStats.eligibleUndergrad.toLocaleString()} / ${top1.majorStats.totalUndergrad.toLocaleString()} 个专业${top1Tracks ? `，重点覆盖：${top1Tracks} 等方向` : ''}`
+    : '';
+  mctx.font = `400 22px ${FONT}`;
+  const top1SummaryLines = top1Summary ? wrapCanvasLines(mctx, top1Summary, INNER_W - 44) : [];
+
+  const hasExamTotal = Boolean(report.examTotalProfile?.hasData);
+  const recs = (report.recommendations || []).slice(0, 3);
+
+  let totalH = 0;
+  totalH += 218; // Header banner
+  totalH += 24;
+  if (hasExamTotal) totalH += 108;
+  totalH += 44 + 2 * 136 + 14 + 28; // 6-subject grid (2 rows x 3 cols)
+  totalH += 44; // Recs section title
+  recs.forEach((rec, i) => {
+    totalH += i === 0 ? 156 + top1SummaryLines.length * 30 : 144;
+    totalH += 16;
+  });
+  totalH += 132; // Footer
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W * SCALE;
+  canvas.height = totalH * SCALE;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(SCALE, SCALE);
+
+  // Page backdrop
+  ctx.fillStyle = '#f7f8fa';
+  ctx.fillRect(0, 0, W, totalH);
+
+  // Top emerald accent bar
+  ctx.fillStyle = '#00b96b';
+  ctx.fillRect(0, 0, W, 8);
+
+  // Header card background
+  ctx.fillStyle = '#effaf5';
+  ctx.fillRect(0, 8, W, 210);
+  ctx.fillStyle = '#b7ebcf';
+  ctx.fillRect(0, 218, W, 1);
+
+  // Brand row
+  let curY = 34;
+  if (logoImg) {
+    ctx.save();
+    drawRoundedRect(ctx, PAD, curY, 44, 44, 10);
+    ctx.clip();
+    ctx.drawImage(logoImg, PAD, curY, 44, 44);
+    ctx.restore();
+  }
+  ctx.fillStyle = '#262626';
+  ctx.font = `700 24px ${FONT}`;
+  ctx.fillText('高中选科助手 · 江苏', PAD + (logoImg ? 56 : 0), curY + 30);
+
+  // Right tag
+  const modeTag = `${report.examYear}年高考 · 3+1+2`;
+  ctx.font = `600 20px ${FONT}`;
+  const tagW = ctx.measureText(modeTag).width + 26;
+  drawRoundedRect(ctx, W - PAD - tagW, curY + 6, tagW, 34, 8);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  ctx.strokeStyle = '#b7ebcf';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = '#007a47';
+  ctx.fillText(modeTag, W - PAD - tagW + 13, curY + 30);
+
+  // Report main title
+  curY = 128;
+  const titlePrefix = report.studentName ? `${report.studentName} · ` : '';
+  const mainTitle = `${titlePrefix}江苏选科分析报告`;
+  ctx.fillStyle = '#1f2937';
+  ctx.font = `700 34px ${FONT}`;
+  ctx.fillText(mainTitle, PAD, curY);
+
+  // Subtitle
+  curY += 38;
+  ctx.fillStyle = '#595959';
+  ctx.font = `400 21px ${FONT}`;
+  ctx.fillText(
+    `基于 ${report.examCount} 次考试记录 · 涵盖 ${(datasetStats?.offeringsCount || 79753).toLocaleString()} 条在苏高校专业要求`,
+    PAD,
+    curY
+  );
+
+  curY = 242;
+
+  // Optional Exam Total Summary Strip
+  if (hasExamTotal) {
+    const et = report.examTotalProfile;
+    drawRoundedRect(ctx, PAD, curY, INNER_W, 84, 12);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.strokeStyle = '#eceef2';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    const parts = [];
+    if (et.avgScore !== null) parts.push(`加权总分 ${et.avgScore} 分`);
+    if (et.latestClassRank !== null) parts.push(`总分班级排名 第 ${et.latestClassRank} 名`);
+    if (et.latestGradeRank !== null) parts.push(`总分年级排名 第 ${et.latestGradeRank} 名`);
+
+    ctx.fillStyle = '#007a47';
+    ctx.font = `700 22px ${FONT}`;
+    ctx.fillText('考试总分概况', PAD + 20, curY + 33);
+
+    ctx.fillStyle = '#262626';
+    ctx.font = `600 22px ${FONT}`;
+    ctx.fillText(parts.join('   |   ') || '已录入总分', PAD + 20, curY + 66);
+
+    curY += 108;
+  }
+
+  // Section 1: 6-Subject Profile
+  ctx.fillStyle = '#262626';
+  ctx.font = `700 26px ${FONT}`;
+  ctx.fillText('六门选考成绩画像', PAD, curY + 24);
+  ctx.fillStyle = '#8c8c8c';
+  ctx.font = `400 18px ${FONT}`;
+  ctx.fillText(report.examCount >= 2 ? '（时间加权均分）' : '（本次成绩）', PAD + 220, curY + 23);
+  curY += 44;
+
+  const colGap = 14;
+  const cardW = (INNER_W - colGap * 2) / 3;
+  const cardH = 122;
+
+  (report.subjectProfiles || []).slice(0, 6).forEach((p, idx) => {
+    const col = idx % 3;
+    const row = Math.floor(idx / 3);
+    const x = PAD + col * (cardW + colGap);
+    const y = curY + row * (cardH + colGap);
+    const isStrong = p.avgScore !== null && p.avgScore >= 80;
+
+    drawRoundedRect(ctx, x, y, cardW, cardH, 12);
+    ctx.fillStyle = isStrong ? '#effaf5' : '#ffffff';
+    ctx.fill();
+    ctx.strokeStyle = isStrong ? '#b7ebcf' : '#eceef2';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.fillStyle = '#262626';
+    ctx.font = `600 22px ${FONT}`;
+    ctx.fillText(p.name, x + 16, y + 32);
+
+    // Trend label
+    const trendTxt =
+      p.trend === '明显上升' ? '↗上升' : p.trend === '有所下滑' ? '↘下滑' : p.trend === '保持稳定' ? '→稳定' : '';
+    if (trendTxt) {
+      ctx.font = `600 17px ${FONT}`;
+      ctx.fillStyle = p.trend === '明显上升' ? '#008a50' : p.trend === '有所下滑' ? '#cf1322' : '#1677ff';
+      const tw = ctx.measureText(trendTxt).width;
+      ctx.fillText(trendTxt, x + cardW - 16 - tw, y + 31);
+    }
+
+    // Score
+    ctx.fillStyle = p.avgScore !== null ? '#007a47' : '#8c8c8c';
+    ctx.font = `700 32px ${FONT}`;
+    ctx.fillText(p.avgScore !== null ? `${p.avgScore} 分` : '未录入', x + 16, y + 76);
+
+    // Trajectory or rank
+    let subLine = '';
+    if (p.scoreHistory && p.scoreHistory.length >= 2) {
+      subLine = `历次 ${p.scoreHistory.map((h) => h.score).join('→')}`;
+    } else if (p.latestClassRank !== null) {
+      subLine = `班级排名 第${p.latestClassRank}名`;
+    } else if (p.latestGradeRank !== null) {
+      subLine = `年级排名 第${p.latestGradeRank}名`;
+    }
+    if (subLine) {
+      ctx.fillStyle = '#595959';
+      ctx.font = `400 17px ${FONT}`;
+      ctx.fillText(subLine, x + 16, y + 106);
+    }
+  });
+
+  curY += cardH * 2 + colGap + 28;
+
+  // Section 2: Top 3 Recommendations
+  ctx.fillStyle = '#262626';
+  ctx.font = `700 26px ${FONT}`;
+  ctx.fillText('推荐选科组合（前三名）', PAD, curY + 24);
+  curY += 44;
+
+  const rankColors = ['#00b96b', '#1677ff', '#08979c'];
+  recs.forEach((rec, i) => {
+    const isTop1 = i === 0;
+    const boxH = isTop1 ? 156 + top1SummaryLines.length * 30 : 144;
+
+    drawRoundedRect(ctx, PAD, curY, INNER_W, boxH, 14);
+    ctx.fillStyle = isTop1 ? '#effaf5' : '#ffffff';
+    ctx.fill();
+    ctx.strokeStyle = isTop1 ? '#b7ebcf' : '#eceef2';
+    ctx.lineWidth = isTop1 ? 1.5 : 1;
+    ctx.stroke();
+
+    // Rank square
+    drawRoundedRect(ctx, PAD + 20, curY + 20, 36, 36, 9);
+    ctx.fillStyle = rankColors[i] || '#8c8c8c';
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `700 22px ${FONT}`;
+    ctx.fillText(String(rec.rank), PAD + 32, curY + 46);
+
+    // Combo name
+    ctx.fillStyle = '#262626';
+    ctx.font = `700 27px ${FONT}`;
+    ctx.fillText(rec.displayName, PAD + 70, curY + 47);
+
+    // Badge pill
+    const badgeLabel = isTop1 ? `★ ${rec.badge}` : rec.badge;
+    ctx.font = `600 19px ${FONT}`;
+    const bw = ctx.measureText(badgeLabel).width + 24;
+    drawRoundedRect(ctx, W - PAD - 20 - bw, curY + 21, bw, 34, 8);
+    ctx.fillStyle = isTop1 ? '#fffbe6' : '#f0f7ff';
+    ctx.fill();
+    ctx.strokeStyle = isTop1 ? '#ffe58f' : '#bae0ff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = isTop1 ? '#ad6800' : '#1677ff';
+    ctx.fillText(badgeLabel, W - PAD - 20 - bw + 12, curY + 45);
+
+    // 3 Metric chips
+    const chips = [
+      { label: '学科实力', val: String(rec.academicScore), color: '#1677ff' },
+      { label: '本科可报', val: `${rec.majorStats?.undergradCoveragePct ?? '-'}%`, color: '#007a47' },
+      { label: '综合推荐', val: String(rec.compositeScore), color: '#531dab' },
+    ];
+    const chipGap = 12;
+    const chipW = (INNER_W - 40 - chipGap * 2) / 3;
+    const chipY = curY + 74;
+
+    chips.forEach((ch, ci) => {
+      const cx = PAD + 20 + ci * (chipW + chipGap);
+      drawRoundedRect(ctx, cx, chipY, chipW, 50, 9);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.strokeStyle = '#eceef2';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillStyle = '#8c8c8c';
+      ctx.font = `400 18px ${FONT}`;
+      ctx.fillText(ch.label, cx + 14, chipY + 32);
+
+      ctx.fillStyle = ch.color;
+      ctx.font = `700 23px ${FONT}`;
+      const vw = ctx.measureText(ch.val).width;
+      ctx.fillText(ch.val, cx + chipW - 14 - vw, chipY + 33);
+    });
+
+    if (isTop1 && top1SummaryLines.length > 0) {
+      ctx.fillStyle = '#595959';
+      ctx.font = `400 21px ${FONT}`;
+      top1SummaryLines.forEach((line, li) => {
+        ctx.fillText(line, PAD + 22, curY + 154 + li * 30);
+      });
+    }
+
+    curY += boxH + 16;
+  });
+
+  // Footer
+  curY += 12;
+  ctx.fillStyle = '#eceef2';
+  ctx.fillRect(PAD, curY, INNER_W, 1);
+
+  curY += 36;
+  ctx.fillStyle = '#262626';
+  ctx.font = `600 21px ${FONT}`;
+  ctx.fillText('完整 12 组合对比与 79,753 条院校专业查询：xuanke.visc.cn/jiangsu', PAD, curY);
+
+  curY += 32;
+  ctx.fillStyle = '#8c8c8c';
+  ctx.font = `400 18px ${FONT}`;
+  ctx.fillText('本报告为家庭选科决策参考，最终招生要求以江苏省教育考试院当年公布为准', PAD, curY);
+
+  return canvas.toDataURL('image/png');
+}
+
+let lastPosterDataUrl = '';
+
+async function openShareModal() {
+  const dialog = document.getElementById('share-report-dialog');
+  if (!dialog || !state.lastReportData) return;
+
+  const imgEl = document.getElementById('share-poster-img');
+  const loadingEl = document.getElementById('share-poster-loading');
+  const previewEl = document.getElementById('share-link-preview');
+  const statusEl = document.getElementById('share-copy-status');
+
+  if (statusEl) statusEl.textContent = '';
+  if (previewEl) previewEl.textContent = buildShareLinkBundle();
+
+  // 默认落在「生成报告长图」Tab
+  switchShareTab('poster');
+  if (imgEl) imgEl.classList.add('hidden');
+  if (loadingEl) {
+    loadingEl.classList.remove('hidden');
+    loadingEl.textContent = '正在生成高清报告长图...';
+  }
+
+  if (typeof dialog.showModal === 'function') {
+    dialog.showModal();
+  }
+
+  try {
+    const dataUrl = await generateSharePosterDataUrl();
+    if (dataUrl && imgEl && loadingEl) {
+      lastPosterDataUrl = dataUrl;
+      imgEl.src = dataUrl;
+      loadingEl.classList.add('hidden');
+      imgEl.classList.remove('hidden');
+    } else if (loadingEl) {
+      loadingEl.textContent = '长图生成失败，请切换「复制带成绩链接」分享';
+    }
+  } catch {
+    if (loadingEl) {
+      loadingEl.textContent = '长图生成失败，请切换「复制带成绩链接」分享';
+    }
+  }
+}
+
+function switchShareTab(tabName) {
+  const posterPanel = document.getElementById('share-panel-poster');
+  const linkPanel = document.getElementById('share-panel-link');
+  posterPanel?.classList.toggle('hidden', tabName !== 'poster');
+  linkPanel?.classList.toggle('hidden', tabName !== 'link');
+
+  document.querySelectorAll('[data-share-tab]').forEach((btn) => {
+    const active = btn.getAttribute('data-share-tab') === tabName;
+    btn.classList.toggle('is-active', active);
+    btn.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+}
+
+function initShareModal() {
+  const dialog = document.getElementById('share-report-dialog');
+  const closeBtn = document.getElementById('share-dialog-close');
+  const downloadBtn = document.getElementById('btn-download-poster');
+  const switchToLinkBtn = document.getElementById('btn-switch-to-link');
+  const copyBundleBtn = document.getElementById('btn-copy-share-bundle');
+  const statusEl = document.getElementById('share-copy-status');
+  if (!dialog) return;
+
+  const close = () => {
+    if (dialog.open) dialog.close();
+  };
+  closeBtn?.addEventListener('click', close);
+  dialog.addEventListener('click', (e) => {
+    if (e.target === dialog) close();
+  });
+
+  document.querySelectorAll('[data-share-tab]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      switchShareTab(btn.getAttribute('data-share-tab'));
+    });
+  });
+
+  switchToLinkBtn?.addEventListener('click', () => switchShareTab('link'));
+
+  downloadBtn?.addEventListener('click', () => {
+    if (!lastPosterDataUrl) return;
+    const isWeChat = /MicroMessenger/i.test(navigator.userAgent || '');
+    if (isWeChat) {
+      alert('微信内请直接长按上方图片，选择「发送给朋友」或「保存到手机」');
+      return;
+    }
+    const a = document.createElement('a');
+    const namePrefix = state.studentName ? `${state.studentName}-` : '';
+    a.download = `${namePrefix}江苏选科分析报告.png`;
+    a.href = lastPosterDataUrl;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
+
+  copyBundleBtn?.addEventListener('click', async () => {
+    const text = buildShareLinkBundle();
+    if (!text) return;
+    const ok = await copyTextToClipboard(text);
+    if (statusEl) {
+      statusEl.textContent = ok
+        ? '✓ 已复制！直接去微信粘贴发送给另一半或家人即可'
+        : '复制失败，请长按上方文本框手动全选复制';
+    }
+  });
 }
 
 function buildReportTextSummary() {
