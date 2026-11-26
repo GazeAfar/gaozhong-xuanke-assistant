@@ -1214,8 +1214,39 @@ summary:focus:not(:focus-visible) {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   flex-wrap: wrap;
+}
+
+.metric-explain-box {
+  margin: 0 0 16px;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--info-soft);
+  border: 1px solid var(--info-border);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.metric-explain-box summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--info);
+  user-select: none;
+}
+
+.metric-explain-list {
+  margin: 10px 0 2px;
+  padding-left: 18px;
+  line-height: 1.7;
+}
+
+.metric-explain-list li {
+  margin-bottom: 6px;
+}
+
+.metric-explain-list li:last-child {
+  margin-bottom: 0;
 }
 
 .rec-card {

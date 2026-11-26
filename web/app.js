@@ -1213,6 +1213,17 @@ function renderReport(data) {
   `
     : '';
 
+  const metricExplainHtml = `
+    <details class="metric-explain-box no-print">
+      <summary>指标说明：什么是「学科实力分」和「综合推荐指数」？</summary>
+      <ul class="metric-explain-list">
+        <li><strong>学科实力分（满分 100）</strong>：不是简单把三科卷面分相加，而是贴合江苏等级赋分规则，按 <strong>60% 排名位置 + 40% 卷面加权均分</strong> 综合得出（近期明显上升 +1.5 分，有所下滑 -1.5 分）。因此<strong>卷子难、卷面分略低但排名靠前</strong>的科目，实力分会比<strong>分数略高但排名靠后</strong>的科目更高；未填排名的科目则按卷面分估算。</li>
+        <li><strong>本科可报占比</strong>：基于江苏省 79,753 条官方高校专业选科要求统计，反映该组合能报考多少比例的本科专业（例如含「物理+化学」的组合约 96%~97%，不含化学的物理组合约 50%）。</li>
+        <li><strong>综合推荐指数（满分 100）</strong>：按 <strong>80% 学科实力分 + 20% 本科可报占比</strong> 综合计算，用于在「更容易拿高分」和「大学专业选择面更广」之间找平衡。所以有时某个组合实力分略高，但因可报本科专业少了一半，综合推荐指数就会偏低。</li>
+      </ul>
+    </details>
+  `;
+
   root.innerHTML = `
     <div class="doc-sheet report-doc">
       <section class="report-header-card">
@@ -1273,6 +1284,7 @@ function renderReport(data) {
             <button type="button" class="btn btn-ghost" id="btn-collapse-all-recs">只看首选</button>
           </div>
         </div>
+        ${metricExplainHtml}
         ${recsHtml}
       </section>
     </div>
@@ -1285,6 +1297,7 @@ function renderReport(data) {
         </div>
         <button type="button" class="btn btn-secondary desktop-only no-print" id="btn-back-report">← 返回白皮书</button>
       </div>
+      ${metricExplainHtml}
       <div class="mobile-scroll-hint no-print">← 左右滑动查看完整表格 →</div>
       <div class="table-wrap">
         <table class="data-table">
