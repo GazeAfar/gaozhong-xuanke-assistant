@@ -45,7 +45,7 @@ function getDynamicExamYearOptions() {
     const examYear = baseYear + offset;
     return {
       year: examYear,
-      label: `${examYear}年高考 · ${gradeLabel}（${examYear + 4}年毕业）`,
+      label: `${examYear}年高考 · ${gradeLabel}`,
     };
   });
 }
@@ -1690,6 +1690,12 @@ function bindEvents() {
     if (mainNav?.classList.contains('nav-open') && siteHeader && !siteHeader.contains(e.target)) {
       closeMobileNav();
     }
+  });
+
+  document.getElementById('province-brand-link')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    closeMobileNav();
+    switchView('section-input');
   });
 
   const navButtons = Array.from(document.querySelectorAll('.main-nav .nav-item'));

@@ -35,6 +35,8 @@ function renderLayout({ title, description, keywords, jsonLd, bodyHtml, canonica
   const canonicalHref = `${origin}${canonicalPath}`;
   const isJiangsuPage = canonicalPath.startsWith('/jiangsu');
 
+  const brandHref = isJiangsuPage ? '/jiangsu' : '/';
+  const brandLinkTitle = isJiangsuPage ? '返回江苏选科首页' : '返回全国首页';
   const brandTitle = isJiangsuPage ? '高中选科助手 · 江苏' : '高中选科助手';
   const brandSubtitle = isJiangsuPage
     ? '江苏省 3+1+2 选科与就业分析 · 79,753 个官方专业要求'
@@ -152,7 +154,7 @@ function renderLayout({ title, description, keywords, jsonLd, bodyHtml, canonica
 <body>
   <header class="topbar" id="site-header">
     <div class="container topbar-inner">
-      <a href="/" class="brand" style="text-decoration:none;">
+      <a href="${brandHref}" class="brand" style="text-decoration:none;" title="${escapeHtml(brandLinkTitle)}">
         <span class="brand-logo-wrap">
           <img class="brand-logo" src="/logo.jpg?v=2" alt="${escapeHtml(brandTitle)} Logo" width="52" height="52" />
         </span>
