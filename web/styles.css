@@ -2245,7 +2245,7 @@ summary:focus:not(:focus-visible) {
   .topbar-inner {
     flex-wrap: nowrap;
     min-height: 54px;
-    padding: 8px 0;
+    padding: 8px 14px;
     gap: 8px;
   }
 
