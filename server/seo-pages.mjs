@@ -33,6 +33,92 @@ const DEFAULT_SITE_ORIGIN = 'https://xuanke.visc.cn';
 function renderLayout({ title, description, keywords, jsonLd, bodyHtml, canonicalPath, siteOrigin = DEFAULT_SITE_ORIGIN }) {
   const origin = String(siteOrigin || DEFAULT_SITE_ORIGIN).replace(/\/+$/, '');
   const canonicalHref = `${origin}${canonicalPath}`;
+  const isJiangsuPage = canonicalPath.startsWith('/jiangsu');
+
+  const brandTitle = isJiangsuPage ? '高中选科助手 · 江苏' : '高中选科助手';
+  const brandSubtitle = isJiangsuPage
+    ? '江苏省 3+1+2 选科与就业分析 · 79,753 个官方专业要求'
+    : '新高考智能选科、专业覆盖率与就业趋势分析';
+
+  const headerNavHtml = isJiangsuPage
+    ? `
+      <nav class="main-nav" id="main-nav" aria-label="江苏选科导航">
+        <a href="/" class="nav-item" style="text-decoration:none;">
+          <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span>首页</span>
+        </a>
+        <a href="/jiangsu#section-input" class="nav-item" style="text-decoration:none;">
+          <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+          <span>成绩录入</span>
+        </a>
+        <a href="/jiangsu#report-root" class="nav-item" style="text-decoration:none;">
+          <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+          <span>选科白皮书</span>
+        </a>
+        <a href="/jiangsu#section-compare" class="nav-item" style="text-decoration:none;">
+          <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+          <span>组合对比</span>
+        </a>
+        <a href="/jiangsu#major-explorer" class="nav-item" style="text-decoration:none;">
+          <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <span>院校专业库</span>
+        </a>
+      </nav>
+
+      <div class="topbar-actions">
+        <a href="/jiangsu" class="btn btn-primary" style="text-decoration:none;">去录入成绩</a>
+        <button type="button" class="nav-toggle portal-nav-toggle" id="btn-portal-nav-toggle" aria-label="展开站点导航" aria-expanded="false" aria-controls="portal-nav">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <nav class="main-nav portal-nav workbench-global-nav" id="portal-nav" aria-label="站点通用导航">
+        <a href="/" class="nav-item" style="text-decoration:none;">首页</a>
+        <a href="/modes" class="nav-item" style="text-decoration:none;">新高考模式</a>
+        <a href="/jiangsu/fufenzhi" class="nav-item ${canonicalPath === '/jiangsu/fufenzhi' ? 'nav-active' : ''}" style="text-decoration:none;">江苏赋分制详解</a>
+        <a href="/contact" class="nav-item" style="text-decoration:none;">联系我们</a>
+      </nav>`
+    : `
+      <nav class="main-nav portal-nav" id="portal-nav" aria-label="专题导航">
+        <a href="/" class="nav-item" style="text-decoration:none;">首页</a>
+        <a href="/modes" class="nav-item ${canonicalPath === '/modes' ? 'nav-active' : ''}" style="text-decoration:none;">新高考模式</a>
+        <a href="/fufenzhi" class="nav-item ${canonicalPath === '/fufenzhi' ? 'nav-active' : ''}" style="text-decoration:none;">赋分制详解</a>
+        <a href="/contact" class="nav-item ${canonicalPath === '/contact' ? 'nav-active' : ''}" style="text-decoration:none;">联系我们</a>
+      </nav>
+
+      <div class="topbar-actions">
+        <a href="/#province-picker" class="btn btn-primary" style="text-decoration:none;">选择省份测算</a>
+        <button type="button" class="nav-toggle portal-nav-toggle" id="btn-portal-nav-toggle" aria-label="展开导航" aria-expanded="false" aria-controls="portal-nav">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>`;
+
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -53,7 +139,7 @@ function renderLayout({ title, description, keywords, jsonLd, bodyHtml, canonica
   <meta property="og:image" content="${escapeHtml(origin)}/logo.jpg?v=2" />
   <meta name="twitter:card" content="summary" />
   <link rel="icon" type="image/jpeg" href="/logo.jpg?v=2" />
-  <link rel="stylesheet" href="/styles.css?v=55" />
+  <link rel="stylesheet" href="/styles.css?v=56" />
   <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-K9LT3P6G"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -67,31 +153,14 @@ function renderLayout({ title, description, keywords, jsonLd, bodyHtml, canonica
     <div class="container topbar-inner">
       <a href="/" class="brand" style="text-decoration:none;">
         <span class="brand-logo-wrap">
-          <img class="brand-logo" src="/logo.jpg?v=2" alt="高中选科助手 Logo" width="52" height="52" />
+          <img class="brand-logo" src="/logo.jpg?v=2" alt="${escapeHtml(brandTitle)} Logo" width="52" height="52" />
         </span>
         <div class="brand-text">
-          <h1>高中选科助手</h1>
-          <p class="subtitle">新高考智能选科、专业覆盖率与就业趋势分析</p>
+          <h1>${escapeHtml(brandTitle)}</h1>
+          <p class="subtitle">${escapeHtml(brandSubtitle)}</p>
         </div>
       </a>
-
-      <nav class="main-nav portal-nav" id="portal-nav" aria-label="专题导航">
-        <a href="/" class="nav-item" style="text-decoration:none;">首页</a>
-        <a href="/modes" class="nav-item ${canonicalPath === '/modes' ? 'nav-active' : ''}" style="text-decoration:none;">新高考模式</a>
-        <a href="/fufenzhi" class="nav-item ${canonicalPath === '/fufenzhi' ? 'nav-active' : ''}" style="text-decoration:none;">赋分制详解</a>
-        <a href="/contact" class="nav-item ${canonicalPath === '/contact' ? 'nav-active' : ''}" style="text-decoration:none;">联系我们</a>
-      </nav>
-
-      <div class="topbar-actions">
-        <a href="/#province-picker" class="btn btn-primary" style="text-decoration:none;">选择省份测算</a>
-        <button type="button" class="nav-toggle portal-nav-toggle" id="btn-portal-nav-toggle" aria-label="展开导航" aria-expanded="false" aria-controls="portal-nav">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-          </svg>
-        </button>
-      </div>
+      ${headerNavHtml}
     </div>
   </header>
 
