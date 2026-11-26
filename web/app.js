@@ -519,12 +519,14 @@ function renderExams() {
         </label>
         <label class="field field-exam-type">
           <span class="field-label">考试类型</span>
-          <select data-exam-idx="${idx}" data-meta="type">
-            <option value="月考" ${exam.type === '月考' ? 'selected' : ''}>月考</option>
-            <option value="期中考试" ${exam.type === '期中考试' ? 'selected' : ''}>期中考试</option>
-            <option value="期末考试" ${exam.type === '期末考试' ? 'selected' : ''}>期末考试</option>
-            <option value="联考" ${exam.type === '联考' ? 'selected' : ''}>联考</option>
-          </select>
+          <div class="select-wrap" data-sheet-title="选择考试类型">
+            <select data-exam-idx="${idx}" data-meta="type">
+              <option value="月考" ${exam.type === '月考' ? 'selected' : ''}>月考</option>
+              <option value="期中考试" ${exam.type === '期中考试' ? 'selected' : ''}>期中考试</option>
+              <option value="期末考试" ${exam.type === '期末考试' ? 'selected' : ''}>期末考试</option>
+              <option value="联考" ${exam.type === '联考' ? 'selected' : ''}>联考</option>
+            </select>
+          </div>
         </label>
         <label class="field">
           <span class="field-label">班级人数</span>
@@ -1512,6 +1514,74 @@ function bindEvents() {
   });
   document.getElementById('btn-load-more-majors').addEventListener('click', () => searchMajors(true));
 
+function initMobileSelectSheet() {
+  const sheet = document.getElementById('mobile-select-sheet');
+  const titleEl = document.getElementById('mobile-select-sheet-title');
+  const listEl = document.getElementById('mobile-select-sheet-list');
+  const closeBtn = document.getElementById('mobile-select-sheet-close');
+  if (!sheet || !titleEl || !listEl || typeof sheet.showModal !== 'function') return;
+
+  let activeSelect = null;
+
+  const closeSheet = () => {
+    if (sheet.open) sheet.close();
+    activeSelect = null;
+  };
+
+  closeBtn?.addEventListener('click', closeSheet);
+  sheet.addEventListener('click', (e) => {
+    if (e.target === sheet) closeSheet();
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!window.matchMedia('(max-width: 860px)').matches) return;
+    const wrap = e.target.closest('.select-wrap');
+    if (!wrap) return;
+    const select = wrap.querySelector('select');
+    if (!select || select.disabled) return;
+
+    e.preventDefault();
+    activeSelect = select;
+    titleEl.textContent = wrap.getAttribute('data-sheet-title') || '请选择';
+
+    listEl.innerHTML = Array.from(select.options)
+      .map((opt) => {
+        const selected = opt.value === select.value;
+        const disabledAttr = opt.disabled ? 'disabled' : '';
+        return `
+          <button
+            type="button"
+            class="bottom-sheet-option ${selected ? 'is-selected' : ''}"
+            role="option"
+            aria-selected="${selected ? 'true' : 'false'}"
+            data-opt-value="${escapeHtml(opt.value)}"
+            ${disabledAttr}
+          >
+            <span class="bottom-sheet-option-text">${escapeHtml(opt.textContent)}</span>
+            ${selected ? '<span class="bottom-sheet-check" aria-hidden="true">✓</span>' : ''}
+          </button>
+        `;
+      })
+      .join('');
+
+    sheet.showModal();
+    const selectedBtn = listEl.querySelector('.bottom-sheet-option.is-selected');
+    selectedBtn?.scrollIntoView({ block: 'nearest' });
+  });
+
+  listEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.bottom-sheet-option');
+    if (!btn || btn.disabled || !activeSelect) return;
+    const nextVal = btn.getAttribute('data-opt-value');
+    if (nextVal !== null && activeSelect.value !== nextVal) {
+      activeSelect.value = nextVal;
+      activeSelect.dispatchEvent(new Event('input', { bubbles: true }));
+      activeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    closeSheet();
+  });
+}
+
   // 页脚快捷导航
   document.querySelectorAll('[data-footer-nav]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -1519,6 +1589,8 @@ function bindEvents() {
       if (targetId) switchView(targetId);
     });
   });
+
+  initMobileSelectSheet();
 }
 
 initApp();

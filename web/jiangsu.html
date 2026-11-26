@@ -32,7 +32,7 @@
     content="基于官方高校专业选科目录与学生多次成绩排名，免费生成高中选科与就业分析白皮书。"
   />
   <link rel="icon" type="image/jpeg" href="/logo.jpg?v=2" />
-  <link rel="stylesheet" href="/styles.css?v=62" />
+  <link rel="stylesheet" href="/styles.css?v=63" />
   <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-K9LT3P6G"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -185,20 +185,24 @@
       <div class="meta-grid">
         <label class="field">
           <span class="field-label">省份与模式</span>
-          <select id="province-select" aria-label="选择高考省份">
-            <option value="JS" selected>江苏省 · 3+1+2（已上线）</option>
-            <option value="MORE" disabled>更多省份陆续上线中（浙 / 粤 / 鲁 / 鄂 / 湘 / 川等）</option>
-          </select>
+          <div class="select-wrap" data-sheet-title="选择省份与模式">
+            <select id="province-select" aria-label="选择高考省份">
+              <option value="JS" selected>江苏省 · 3+1+2（已上线）</option>
+              <option value="MORE" disabled>更多省份陆续上线中（浙 / 粤 / 鲁 / 鄂 / 湘 / 川等）</option>
+            </select>
+          </div>
         </label>
 
         <label class="field">
           <span class="field-label">高考年份</span>
-          <select id="exam-year">
-            <option value="2029" selected>2029年高考 · 当前高一（2033年毕业）</option>
-            <option value="2030">2030年高考 · 当前初三（2034年毕业）</option>
-            <option value="2031">2031年高考 · 当前初二（2035年毕业）</option>
-            <option value="2032">2032年高考 · 当前初一（2036年毕业）</option>
-          </select>
+          <div class="select-wrap" data-sheet-title="选择高考年份">
+            <select id="exam-year">
+              <option value="2029" selected>2029年高考 · 当前高一（2033年毕业）</option>
+              <option value="2030">2030年高考 · 当前初三（2034年毕业）</option>
+              <option value="2031">2031年高考 · 当前初二（2035年毕业）</option>
+              <option value="2032">2032年高考 · 当前初一（2036年毕业）</option>
+            </select>
+          </div>
         </label>
 
         <label class="field">
@@ -354,12 +358,16 @@
 
       <div class="explorer-bar">
         <input type="search" id="major-search-input" placeholder="搜高校或专业，如：南京大学、计算机、临床医学" maxlength="50" />
-        <select id="major-combo-filter" aria-label="按选科组合筛选"></select>
-        <select id="major-level-filter" aria-label="按学历层次筛选">
-          <option value="本科">仅本科</option>
-          <option value="专科">仅专科</option>
-          <option value="ALL">全部层次</option>
-        </select>
+        <div class="select-wrap explorer-select-wrap" data-sheet-title="选择选科组合">
+          <select id="major-combo-filter" aria-label="按选科组合筛选"></select>
+        </div>
+        <div class="select-wrap explorer-select-wrap" data-sheet-title="选择学历层次">
+          <select id="major-level-filter" aria-label="按学历层次筛选">
+            <option value="本科">仅本科</option>
+            <option value="专科">仅专科</option>
+            <option value="ALL">全部层次</option>
+          </select>
+        </div>
         <button type="button" class="btn btn-primary" id="btn-search-majors">查询</button>
         <label class="switch-inline" for="major-only-eligible">
           <input type="checkbox" id="major-only-eligible" class="switch-input" checked />
@@ -448,7 +456,22 @@
     </div>
   </dialog>
 
-  <script src="/app.js?v=40"></script>
+  <dialog id="mobile-select-sheet" class="bottom-sheet-dialog" aria-labelledby="mobile-select-sheet-title">
+    <div class="bottom-sheet-panel">
+      <div class="bottom-sheet-head">
+        <h3 id="mobile-select-sheet-title" class="bottom-sheet-title">请选择</h3>
+        <button type="button" class="confirm-dialog-close" id="mobile-select-sheet-close" aria-label="关闭">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div id="mobile-select-sheet-list" class="bottom-sheet-list" role="listbox"></div>
+    </div>
+  </dialog>
+
+  <script src="/app.js?v=41"></script>
   <script>
     (function () {
       var btn = document.getElementById('btn-portal-nav-toggle');

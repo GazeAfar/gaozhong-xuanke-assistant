@@ -2363,6 +2363,122 @@ summary:focus:not(:focus-visible) {
   background: #a8071a;
 }
 
+.select-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.select-wrap select {
+  width: 100%;
+}
+
+/* APP / 微信小程序风格底部通栏选择器（移动端 ≤860px 生效） */
+.bottom-sheet-dialog {
+  width: 100%;
+  max-width: 100%;
+  margin: auto 0 0 0;
+  padding: 0;
+  border: none;
+  border-radius: 18px 18px 0 0;
+  background: transparent;
+  overflow: visible;
+}
+
+.bottom-sheet-dialog::backdrop {
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.bottom-sheet-panel {
+  background: #ffffff;
+  border-radius: 18px 18px 0 0;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.14);
+  animation: sheetSlideUp 220ms var(--ease-out) both;
+}
+
+@keyframes sheetSlideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.bottom-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 18px 13px;
+  border-bottom: 1px solid var(--border);
+}
+
+.bottom-sheet-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.bottom-sheet-list {
+  max-height: 62vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 6px 0;
+}
+
+.bottom-sheet-option {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 20px;
+  border: none;
+  border-bottom: 1px solid #f3f4f6;
+  background: #ffffff;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.bottom-sheet-option:last-child {
+  border-bottom: none;
+}
+
+.bottom-sheet-option:active:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.bottom-sheet-option.is-selected {
+  background: var(--primary-soft);
+  color: var(--primary-ink);
+  font-weight: 600;
+}
+
+.bottom-sheet-option:disabled {
+  color: #bfbfbf;
+  cursor: not-allowed;
+}
+
+.bottom-sheet-option-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.bottom-sheet-check {
+  color: var(--primary);
+  font-size: 16px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
 /* ===========================
    Responsive Breakpoints
    =========================== */
@@ -2403,6 +2519,14 @@ summary:focus:not(:focus-visible) {
 
 /* 平板/窄窗/移动端（≤860px）：切换底部 Tab 栏与右上角折叠菜单，彻底避免顶部导航与 Logo 重叠 */
 @media (max-width: 860px) {
+  .select-wrap {
+    cursor: pointer;
+  }
+
+  .select-wrap select {
+    pointer-events: none;
+  }
+
   .main-content {
     padding-bottom: calc(82px + env(safe-area-inset-bottom));
   }
@@ -2804,8 +2928,7 @@ summary:focus:not(:focus-visible) {
   }
 
   #major-search-input,
-  #major-combo-filter,
-  #major-level-filter {
+  .explorer-select-wrap {
     grid-column: 1 / -1;
   }
 
