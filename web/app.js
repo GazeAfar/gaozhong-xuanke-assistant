@@ -2337,28 +2337,123 @@ function initMobileSelectSheet() {
   const titleEl = document.getElementById('mobile-select-sheet-title');
   const listEl = document.getElementById('mobile-select-sheet-list');
   const closeBtn = document.getElementById('mobile-select-sheet-close');
-  if (!sheet || !titleEl || !listEl || typeof sheet.showModal !== 'function') return;
+
+  // PC 端美化悬浮下拉面板（> 860px 生效）
+  const popover = document.createElement('div');
+  popover.id = 'desktop-select-popover';
+  popover.className = 'desktop-select-popover hidden';
+  popover.setAttribute('role', 'listbox');
+  document.body.appendChild(popover);
 
   let activeSelect = null;
+  let activeWrap = null;
+
+  const closeDesktopPopover = () => {
+    popover.classList.add('hidden');
+    if (activeWrap) activeWrap.classList.remove('is-open');
+    activeWrap = null;
+    if (!sheet?.open) activeSelect = null;
+  };
 
   const closeSheet = () => {
-    if (sheet.open) sheet.close();
+    if (sheet?.open) sheet.close();
     activeSelect = null;
   };
 
   closeBtn?.addEventListener('click', closeSheet);
-  sheet.addEventListener('click', (e) => {
+  sheet?.addEventListener('click', (e) => {
     if (e.target === sheet) closeSheet();
   });
 
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !popover.classList.contains('hidden')) {
+      closeDesktopPopover();
+    }
+  });
+
+  window.addEventListener('resize', closeDesktopPopover);
+  window.addEventListener(
+    'scroll',
+    (e) => {
+      if (!popover.classList.contains('hidden') && !popover.contains(e.target)) {
+        closeDesktopPopover();
+      }
+    },
+    true
+  );
+
+  const openDesktopPopover = (wrap, select) => {
+    if (activeWrap === wrap && !popover.classList.contains('hidden')) {
+      closeDesktopPopover();
+      return;
+    }
+    closeDesktopPopover();
+    activeWrap = wrap;
+    activeSelect = select;
+    wrap.classList.add('is-open');
+
+    const checkSvg =
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
+    popover.innerHTML = Array.from(select.options)
+      .map((opt) => {
+        const selected = opt.value === select.value;
+        const disabledAttr = opt.disabled ? 'disabled' : '';
+        return `
+          <button
+            type="button"
+            class="desktop-select-option ${selected ? 'is-selected' : ''}"
+            role="option"
+            aria-selected="${selected ? 'true' : 'false'}"
+            data-opt-value="${escapeHtml(opt.value)}"
+            ${disabledAttr}
+          >
+            <span>${escapeHtml(opt.textContent)}</span>
+            ${selected ? `<span class="desktop-select-check" aria-hidden="true">${checkSvg}</span>` : ''}
+          </button>
+        `;
+      })
+      .join('');
+
+    const rect = wrap.getBoundingClientRect();
+    const popWidth = Math.max(rect.width, 180);
+    popover.style.width = `${popWidth}px`;
+    popover.classList.remove('hidden');
+
+    const popHeight = Math.min(popover.scrollHeight, 300);
+    const spaceBelow = window.innerHeight - rect.bottom - 12;
+    const left = Math.min(Math.max(8, rect.left), window.innerWidth - popWidth - 8);
+    popover.style.left = `${left}px`;
+    if (spaceBelow < popHeight && rect.top > spaceBelow) {
+      popover.style.top = `${Math.max(8, rect.top - popHeight - 6)}px`;
+    } else {
+      popover.style.top = `${rect.bottom + 6}px`;
+    }
+
+    const selectedBtn = popover.querySelector('.desktop-select-option.is-selected');
+    selectedBtn?.scrollIntoView({ block: 'nearest' });
+  };
+
   document.addEventListener('click', (e) => {
-    if (!window.matchMedia('(max-width: 860px)').matches) return;
     const wrap = e.target.closest('.select-wrap');
-    if (!wrap) return;
+    if (!wrap) {
+      if (!popover.classList.contains('hidden') && !popover.contains(e.target)) {
+        closeDesktopPopover();
+      }
+      return;
+    }
     const select = wrap.querySelector('select');
     if (!select || select.disabled) return;
 
     e.preventDefault();
+
+    // 移动端（≤860px）使用底部通栏抽屉；PC 端（>860px）使用精致悬浮下拉卡片
+    if (!window.matchMedia('(max-width: 860px)').matches) {
+      openDesktopPopover(wrap, select);
+      return;
+    }
+
+    if (!sheet || !titleEl || !listEl || typeof sheet.showModal !== 'function') return;
     activeSelect = select;
     titleEl.textContent = wrap.getAttribute('data-sheet-title') || '请选择';
 
@@ -2387,15 +2482,25 @@ function initMobileSelectSheet() {
     selectedBtn?.scrollIntoView({ block: 'nearest' });
   });
 
-  listEl.addEventListener('click', (e) => {
-    const btn = e.target.closest('.bottom-sheet-option');
-    if (!btn || btn.disabled || !activeSelect) return;
-    const nextVal = btn.getAttribute('data-opt-value');
-    if (nextVal !== null && activeSelect.value !== nextVal) {
+  const applyOptionValue = (nextVal) => {
+    if (nextVal !== null && activeSelect && activeSelect.value !== nextVal) {
       activeSelect.value = nextVal;
       activeSelect.dispatchEvent(new Event('input', { bubbles: true }));
       activeSelect.dispatchEvent(new Event('change', { bubbles: true }));
     }
+  };
+
+  popover.addEventListener('click', (e) => {
+    const btn = e.target.closest('.desktop-select-option');
+    if (!btn || btn.disabled || !activeSelect) return;
+    applyOptionValue(btn.getAttribute('data-opt-value'));
+    closeDesktopPopover();
+  });
+
+  listEl?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.bottom-sheet-option');
+    if (!btn || btn.disabled || !activeSelect) return;
+    applyOptionValue(btn.getAttribute('data-opt-value'));
     closeSheet();
   });
 }

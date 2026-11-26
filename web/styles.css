@@ -2545,10 +2545,112 @@ summary:focus:not(:focus-visible) {
 .select-wrap {
   position: relative;
   width: 100%;
+  cursor: pointer;
 }
 
 .select-wrap select {
   width: 100%;
+  pointer-events: none;
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 34px;
+  background-image: none;
+}
+
+.select-wrap::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 1.8px solid #8c8c8c;
+  border-bottom: 1.8px solid #8c8c8c;
+  transform: translateY(-65%) rotate(45deg);
+  pointer-events: none;
+  transition: transform 180ms var(--ease-out), border-color 150ms var(--ease-out);
+}
+
+.select-wrap:hover select {
+  border-color: var(--primary);
+}
+
+.select-wrap.is-open select {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 185, 107, 0.14);
+}
+
+.select-wrap.is-open::after {
+  border-color: var(--primary-ink);
+  transform: translateY(-30%) rotate(-135deg);
+}
+
+/* PC 端美化悬浮下拉面板 */
+.desktop-select-popover {
+  position: fixed;
+  z-index: 90;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.10), 0 2px 8px rgba(0, 0, 0, 0.04);
+  max-height: 300px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+  animation: popoverFadeIn 140ms var(--ease-out) both;
+}
+
+@keyframes popoverFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.desktop-select-option {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.desktop-select-option:hover:not(:disabled):not(.is-selected) {
+  background: var(--surface-hover);
+}
+
+.desktop-select-option.is-selected {
+  background: var(--primary-soft);
+  color: var(--primary-ink);
+  font-weight: 600;
+}
+
+.desktop-select-option:disabled {
+  color: #bfbfbf;
+  cursor: not-allowed;
+}
+
+.desktop-select-check {
+  color: var(--primary);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
 }
 
 /* APP / 微信小程序风格底部通栏选择器（移动端 ≤860px 生效） */
