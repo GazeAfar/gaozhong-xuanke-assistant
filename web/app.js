@@ -1676,6 +1676,8 @@ function bindEvents() {
   const closeMobileNav = () => {
     mainNav?.classList.remove('nav-open');
     navToggleBtn?.setAttribute('aria-expanded', 'false');
+    document.getElementById('portal-nav')?.classList.remove('nav-open');
+    document.getElementById('btn-portal-nav-toggle')?.setAttribute('aria-expanded', 'false');
   };
 
   navToggleBtn?.addEventListener('click', (e) => {

@@ -163,11 +163,12 @@
         </button>
       </div>
 
-      <nav class="main-nav portal-nav workbench-global-nav" id="portal-nav" aria-label="站点通用导航">
+      <nav class="main-nav portal-nav workbench-global-nav" id="portal-nav" aria-label="江苏选科导航">
         <a href="/" class="nav-item" style="text-decoration:none;">首页</a>
-        <a href="/modes" class="nav-item" style="text-decoration:none;">新高考模式</a>
-        <a href="/jiangsu/fufenzhi" class="nav-item" style="text-decoration:none;">江苏赋分制详解</a>
-        <a href="/contact" class="nav-item" style="text-decoration:none;">联系我们</a>
+        <button type="button" class="nav-item nav-active" data-nav="section-input">成绩录入</button>
+        <button type="button" class="nav-item" data-nav="report-root">选科报告</button>
+        <button type="button" class="nav-item" data-nav="section-compare">组合对比</button>
+        <button type="button" class="nav-item" data-nav="major-explorer">院校专业</button>
       </nav>
     </div>
   </header>
@@ -537,7 +538,7 @@
     </div>
   </dialog>
 
-  <script src="/app.js?v=50"></script>
+  <script src="/app.js?v=51"></script>
   <script>
     (function () {
       var btn = document.getElementById('btn-portal-nav-toggle');

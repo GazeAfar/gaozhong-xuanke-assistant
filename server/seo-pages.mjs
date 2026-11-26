@@ -94,11 +94,12 @@ function renderLayout({ title, description, keywords, jsonLd, bodyHtml, canonica
         </button>
       </div>
 
-      <nav class="main-nav portal-nav workbench-global-nav" id="portal-nav" aria-label="站点通用导航">
+      <nav class="main-nav portal-nav workbench-global-nav" id="portal-nav" aria-label="江苏选科导航">
         <a href="/" class="nav-item" style="text-decoration:none;">首页</a>
-        <a href="/modes" class="nav-item" style="text-decoration:none;">新高考模式</a>
-        <a href="/jiangsu/fufenzhi" class="nav-item ${canonicalPath === '/jiangsu/fufenzhi' ? 'nav-active' : ''}" style="text-decoration:none;">江苏赋分制详解</a>
-        <a href="/contact" class="nav-item" style="text-decoration:none;">联系我们</a>
+        <a href="/jiangsu#section-input" class="nav-item" style="text-decoration:none;">成绩录入</a>
+        <a href="/jiangsu#report-root" class="nav-item" style="text-decoration:none;">选科报告</a>
+        <a href="/jiangsu#section-compare" class="nav-item" style="text-decoration:none;">组合对比</a>
+        <a href="/jiangsu#major-explorer" class="nav-item" style="text-decoration:none;">院校专业</a>
       </nav>`
     : `
       <nav class="main-nav portal-nav" id="portal-nav" aria-label="专题导航">
