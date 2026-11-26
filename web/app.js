@@ -1719,12 +1719,12 @@ function wrapCanvasLines(ctx, text, maxWidth) {
   return lines;
 }
 
-function loadLogoImage() {
+function loadLocalImage(src) {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => resolve(img);
     img.onerror = () => resolve(null);
-    img.src = '/logo.jpg?v=2';
+    img.src = src;
   });
 }
 
@@ -1732,7 +1732,10 @@ async function generateSharePosterDataUrl() {
   const data = state.lastReportData;
   if (!data?.report) return null;
   const { report, datasetStats } = data;
-  const logoImg = await loadLogoImage();
+  const [logoImg, qrImg] = await Promise.all([
+    loadLocalImage('/logo.jpg?v=2'),
+    loadLocalImage('/qr-jiangsu.svg?v=1'),
+  ]);
 
   const W = 750;
   const PAD = 32;
@@ -1764,7 +1767,7 @@ async function generateSharePosterDataUrl() {
     totalH += i === 0 ? 156 + top1SummaryLines.length * 30 : 144;
     totalH += 16;
   });
-  totalH += 132; // Footer
+  totalH += 204; // Footer card with QR code + bottom disclaimer
 
   const canvas = document.createElement('canvas');
   canvas.width = W * SCALE;
@@ -2006,20 +2009,48 @@ async function generateSharePosterDataUrl() {
     curY += boxH + 16;
   });
 
-  // Footer
-  curY += 12;
-  ctx.fillStyle = '#eceef2';
-  ctx.fillRect(PAD, curY, INNER_W, 1);
+  // Footer Card with QR Code (left: callout + URL, right: scannable QR code)
+  curY += 8;
+  const footerCardH = 136;
+  drawRoundedRect(ctx, PAD, curY, INNER_W, footerCardH, 14);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  ctx.strokeStyle = '#eceef2';
+  ctx.lineWidth = 1;
+  ctx.stroke();
 
-  curY += 36;
+  const qrSize = 104;
+  const qrX = W - PAD - 16 - qrSize;
+  const qrY = curY + (footerCardH - qrSize) / 2;
+
   ctx.fillStyle = '#262626';
-  ctx.font = `600 21px ${FONT}`;
-  ctx.fillText('完整 12 组合对比与 79,753 条院校专业查询：xuanke.visc.cn/jiangsu', PAD, curY);
+  ctx.font = `700 23px ${FONT}`;
+  ctx.fillText('长按识别二维码 · 进入江苏选科助手', PAD + 20, curY + 42);
 
-  curY += 32;
+  ctx.fillStyle = '#007a47';
+  ctx.font = `600 20px ${FONT}`;
+  ctx.fillText('https://xuanke.visc.cn/jiangsu', PAD + 20, curY + 76);
+
   ctx.fillStyle = '#8c8c8c';
   ctx.font = `400 18px ${FONT}`;
-  ctx.fillText('本报告为家庭选科决策参考，最终招生要求以江苏省教育考试院当年公布为准', PAD, curY);
+  ctx.fillText('查全部 12 组合对比与 79,753 条高校专业要求', PAD + 20, curY + 108);
+
+  if (qrImg) {
+    drawRoundedRect(ctx, qrX - 4, qrY - 4, qrSize + 8, qrSize + 8, 8);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.strokeStyle = '#eceef2';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+  }
+
+  curY += footerCardH + 34;
+  const disclaimerTxt = '本报告仅供家庭选科决策参考，最终招生要求以江苏省教育考试院当年公布为准';
+  ctx.fillStyle = '#8c8c8c';
+  ctx.font = `400 17px ${FONT}`;
+  const dw = ctx.measureText(disclaimerTxt).width;
+  ctx.fillText(disclaimerTxt, (W - dw) / 2, curY);
 
   return canvas.toDataURL('image/png');
 }
