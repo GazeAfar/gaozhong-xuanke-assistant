@@ -1,6 +1,0 @@
-{
-  "navigationBarTitleText": "组合比较",
-  "usingComponents": {
-    "empty-state": "/components/empty-state/index"
-  }
-}

@@ -1,6 +1,0 @@
-{
-  "navigationBarTitleText": "全部 12 种组合",
-  "usingComponents": {
-    "combination-card": "/components/combination-card/index"
-  }
-}

@@ -1,8 +1,0 @@
-{
-  "navigationBarTitleText": "专业选科详情",
-  "usingComponents": {
-    "requirement-badge": "/components/requirement-badge/index",
-    "source-block": "/components/source-block/index",
-    "empty-state": "/components/empty-state/index"
-  }
-}

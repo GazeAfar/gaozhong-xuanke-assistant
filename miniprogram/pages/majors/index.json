@@ -1,7 +1,0 @@
-{
-  "navigationBarTitleText": "查专业",
-  "usingComponents": {
-    "requirement-badge": "/components/requirement-badge/index",
-    "empty-state": "/components/empty-state/index"
-  }
-}

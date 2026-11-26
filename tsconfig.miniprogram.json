@@ -1,9 +1,0 @@
-{
-  "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "rootDir": "miniprogram",
-    "noEmit": true,
-    "types": ["miniprogram-api-typings"]
-  },
-  "include": ["miniprogram/**/*.ts"]
-}

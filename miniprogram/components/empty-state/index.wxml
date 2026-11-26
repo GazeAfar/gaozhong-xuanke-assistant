@@ -1,5 +1,0 @@
-<view class="empty-card">
-  <view class="empty-title">{{title}}</view>
-  <view class="empty-desc" wx:if="{{description}}">{{description}}</view>
-  <button class="btn-primary empty-btn" wx:if="{{actionText}}" bindtap="onAction">{{actionText}}</button>
-</view>

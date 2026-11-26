@@ -1,6 +1,0 @@
-{
-  "navigationBarTitleText": "填写情况",
-  "usingComponents": {
-    "rating-selector": "/components/rating-selector/index"
-  }
-}
