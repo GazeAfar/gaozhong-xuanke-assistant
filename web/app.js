@@ -669,10 +669,10 @@ function renderRankLines(p, totalExamCount = 1) {
   if (classCount >= 2) {
     if (p.avgClassTopPct !== null) {
       lines.push(
-        `班排均位：前 <strong>${p.avgClassTopPct}%</strong> · 最近第 ${p.latestClassRank} 名`
+        `班级排名均位：前 <strong>${p.avgClassTopPct}%</strong> · 最近第 ${p.latestClassRank} 名`
       );
     } else if (p.latestClassRank !== null) {
-      lines.push(`班排最近：第 <strong>${p.latestClassRank}</strong> 名`);
+      lines.push(`班级排名最近：第 <strong>${p.latestClassRank}</strong> 名`);
     }
   } else if (classCount === 1 && p.latestClassRank !== null) {
     const pctText = p.latestClassTopPct !== null ? `（前 ${p.latestClassTopPct}%）` : '';
@@ -680,23 +680,23 @@ function renderRankLines(p, totalExamCount = 1) {
       totalExamCount > 1 && p.latestClassRankExamIndex
         ? ` <span class="rank-source-note">· 仅第 ${p.latestClassRankExamIndex} 次录入</span>`
         : '';
-    lines.push(`班排：第 <strong>${p.latestClassRank}</strong> 名${pctText}${srcNote}`);
+    lines.push(`班级排名：第 <strong>${p.latestClassRank}</strong> 名${pctText}${srcNote}`);
   } else if (p.avgClassTopPct !== null || p.latestClassRank !== null) {
     // 兼容旧缓存数据
     lines.push(
       p.avgClassTopPct !== null
-        ? `班排均位：前 <strong>${p.avgClassTopPct}%</strong>`
-        : `班排：第 <strong>${p.latestClassRank}</strong> 名`
+        ? `班级排名均位：前 <strong>${p.avgClassTopPct}%</strong>`
+        : `班级排名：第 <strong>${p.latestClassRank}</strong> 名`
     );
   }
 
   if (gradeCount >= 2) {
     if (p.avgGradeTopPct !== null) {
       lines.push(
-        `年排均位：前 <strong>${p.avgGradeTopPct}%</strong> · 最近第 ${p.latestGradeRank} 名`
+        `年级排名均位：前 <strong>${p.avgGradeTopPct}%</strong> · 最近第 ${p.latestGradeRank} 名`
       );
     } else if (p.latestGradeRank !== null) {
-      lines.push(`年排最近：第 <strong>${p.latestGradeRank}</strong> 名`);
+      lines.push(`年级排名最近：第 <strong>${p.latestGradeRank}</strong> 名`);
     }
   } else if (gradeCount === 1 && p.latestGradeRank !== null) {
     const pctText = p.latestGradeTopPct !== null ? `（前 ${p.latestGradeTopPct}%）` : '';
@@ -704,12 +704,12 @@ function renderRankLines(p, totalExamCount = 1) {
       totalExamCount > 1 && p.latestGradeRankExamIndex
         ? ` <span class="rank-source-note">· 仅第 ${p.latestGradeRankExamIndex} 次录入</span>`
         : '';
-    lines.push(`年排：第 <strong>${p.latestGradeRank}</strong> 名${pctText}${srcNote}`);
+    lines.push(`年级排名：第 <strong>${p.latestGradeRank}</strong> 名${pctText}${srcNote}`);
   } else if (p.avgGradeTopPct !== null || p.latestGradeRank !== null) {
     lines.push(
       p.avgGradeTopPct !== null
-        ? `年排均位：前 <strong>${p.avgGradeTopPct}%</strong>`
-        : `年排：第 <strong>${p.latestGradeRank}</strong> 名`
+        ? `年级排名均位：前 <strong>${p.avgGradeTopPct}%</strong>`
+        : `年级排名：第 <strong>${p.latestGradeRank}</strong> 名`
     );
   }
 
@@ -971,7 +971,7 @@ function renderReport(data) {
             <span class="profile-subj">总分班级排名</span>
           </div>
           <div class="profile-score-big" style="color:var(--info);">第 ${examTotal.latestClassRank} <small>名</small></div>
-          ${renderTotalRankDetail(examTotal.classRankCount, examTotal.avgClassTopPct, examTotal.latestClassTopPct, examTotal.latestClassRank, examTotal.latestClassRankExamIndex, '班排')}
+          ${renderTotalRankDetail(examTotal.classRankCount, examTotal.avgClassTopPct, examTotal.latestClassTopPct, examTotal.latestClassRank, examTotal.latestClassRankExamIndex, '班级排名')}
         </div>`
             : ''
         }
@@ -982,7 +982,7 @@ function renderReport(data) {
             <span class="profile-subj">总分年级排名</span>
           </div>
           <div class="profile-score-big" style="color:var(--purple);">第 ${examTotal.latestGradeRank} <small>名</small></div>
-          ${renderTotalRankDetail(examTotal.gradeRankCount, examTotal.avgGradeTopPct, examTotal.latestGradeTopPct, examTotal.latestGradeRank, examTotal.latestGradeRankExamIndex, '年排')}
+          ${renderTotalRankDetail(examTotal.gradeRankCount, examTotal.avgGradeTopPct, examTotal.latestGradeTopPct, examTotal.latestGradeRank, examTotal.latestGradeRankExamIndex, '年级排名')}
         </div>`
             : ''
         }
@@ -1036,17 +1036,12 @@ function renderReport(data) {
           <div>
             <h2 class="report-title">${escapeHtml(titlePrefix)}江苏选科与就业白皮书</h2>
             <p class="hint">生成于 ${escapeHtml(generatedTime)} · 基于 ${report.examCount} 次考试记录</p>
+            <p class="report-meta-line">江苏 3+1+2 · ${report.examYear}年高考（本科 ${report.gradYear} / 读研 ${report.masterGradYear} 毕业） · 涵盖 ${datasetStats.offeringsCount.toLocaleString()} 个在苏高校专业</p>
           </div>
-          <div class="report-header-actions no-print">
+          <div class="report-header-actions desktop-only no-print">
             <button type="button" class="btn btn-secondary" id="btn-back-edit">← 修改成绩</button>
             <button type="button" class="btn btn-primary" id="btn-print-inline">导出 PDF</button>
           </div>
-        </div>
-        <div class="report-meta-tags">
-          <span class="pill">江苏 3+1+2</span>
-          <span class="pill">${report.examYear} 年高考</span>
-          <span class="pill">本科 ${report.gradYear} / 读研 ${report.masterGradYear} 毕业</span>
-          <span class="pill pill-success">涵盖 ${datasetStats.offeringsCount.toLocaleString()} 个在苏招生高校专业</span>
         </div>
       </section>
 
@@ -1100,7 +1095,7 @@ function renderReport(data) {
           <h2>全部 12 种组合横向对比</h2>
           <p class="hint">按学科实力分与在苏招生本科专业覆盖率综合排序</p>
         </div>
-        <button type="button" class="btn btn-secondary no-print" id="btn-back-report">← 返回白皮书</button>
+        <button type="button" class="btn btn-secondary desktop-only no-print" id="btn-back-report">← 返回白皮书</button>
       </div>
       <div class="mobile-scroll-hint no-print">← 左右滑动查看完整表格 →</div>
       <div class="table-wrap">
@@ -1127,7 +1122,7 @@ function renderReport(data) {
 
   document.getElementById('btn-print-top').disabled = false;
 
-  document.getElementById('btn-print-inline')?.addEventListener('click', () => window.print());
+  document.getElementById('btn-print-inline')?.addEventListener('click', handleExportPdf);
   document.getElementById('btn-back-edit')?.addEventListener('click', () => switchView('section-input'));
   document.getElementById('btn-back-report')?.addEventListener('click', () => switchView('report-root'));
   document.getElementById('btn-expand-all-recs')?.addEventListener('click', () => {
@@ -1503,7 +1498,7 @@ function bindEvents() {
   });
 
   document.getElementById('btn-generate').addEventListener('click', generateReport);
-  document.getElementById('btn-print-top').addEventListener('click', () => window.print());
+  document.getElementById('btn-print-top').addEventListener('click', handleExportPdf);
 
   document.getElementById('btn-search-majors').addEventListener('click', () => searchMajors(false));
   document.getElementById('major-combo-filter').addEventListener('change', () => searchMajors(false));
@@ -1513,6 +1508,92 @@ function bindEvents() {
     if (e.key === 'Enter') searchMajors(false);
   });
   document.getElementById('btn-load-more-majors').addEventListener('click', () => searchMajors(true));
+
+function buildReportTextSummary() {
+  const report = state.lastReportData?.report;
+  if (!report) return '';
+  const titlePrefix = report.studentName ? `${report.studentName} · ` : '';
+  const lines = [
+    `【${titlePrefix}江苏选科与就业分析摘要】`,
+    `${report.examYear}年高考（${report.gradYear}年本科毕业） · 基于 ${report.examCount} 次考试`,
+    '',
+    '▶ 推荐选科前三组：',
+  ];
+  (report.recommendations || []).forEach((rec) => {
+    const pct = rec.majorStats?.undergradCoveragePct ?? '-';
+    lines.push(
+      `${rec.rank}. ${rec.displayName}（${rec.badge}）| 学科实力 ${rec.academicScore} · 本科可报 ${pct}% · 综合 ${rec.compositeScore}`
+    );
+  });
+  lines.push('', '详细白皮书与 79,753 条专业查询：https://xuanke.visc.cn/jiangsu');
+  return lines.join('\n');
+}
+
+function copyTextToClipboard(text) {
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    return navigator.clipboard.writeText(text).then(() => true).catch(() => false);
+  }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return Promise.resolve(ok);
+  } catch {
+    return Promise.resolve(false);
+  }
+}
+
+function handleExportPdf() {
+  const isWeChat = /MicroMessenger/i.test(navigator.userAgent || '');
+  const dialog = document.getElementById('pdf-guide-dialog');
+  if (isWeChat && dialog && typeof dialog.showModal === 'function') {
+    const tipEl = document.getElementById('pdf-copy-status');
+    if (tipEl) tipEl.textContent = '';
+    dialog.showModal();
+    return;
+  }
+  if (typeof window.print === 'function') {
+    window.print();
+  }
+}
+
+function initPdfGuideModal() {
+  const dialog = document.getElementById('pdf-guide-dialog');
+  const closeBtn = document.getElementById('pdf-guide-close');
+  const copySummaryBtn = document.getElementById('btn-copy-summary');
+  const copyLinkBtn = document.getElementById('btn-copy-page-link');
+  const tipEl = document.getElementById('pdf-copy-status');
+  if (!dialog) return;
+
+  const close = () => {
+    if (dialog.open) dialog.close();
+  };
+  closeBtn?.addEventListener('click', close);
+  dialog.addEventListener('click', (e) => {
+    if (e.target === dialog) close();
+  });
+
+  copySummaryBtn?.addEventListener('click', async () => {
+    const summary = buildReportTextSummary();
+    if (!summary) return;
+    const ok = await copyTextToClipboard(summary);
+    if (tipEl) {
+      tipEl.textContent = ok ? '✓ 已复制选科摘要，可直接粘贴发到微信群或家人' : '复制失败，请手动截屏保存';
+    }
+  });
+
+  copyLinkBtn?.addEventListener('click', async () => {
+    const ok = await copyTextToClipboard(window.location.href);
+    if (tipEl) {
+      tipEl.textContent = ok ? '✓ 已复制网址，请打开手机自带浏览器粘贴访问并导出 PDF' : '复制失败，请点右上角「···」选择在浏览器打开';
+    }
+  });
+}
 
 function initMobileSelectSheet() {
   const sheet = document.getElementById('mobile-select-sheet');
@@ -1591,6 +1672,7 @@ function initMobileSelectSheet() {
   });
 
   initMobileSelectSheet();
+  initPdfGuideModal();
 }
 
 initApp();

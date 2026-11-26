@@ -32,7 +32,7 @@
     content="基于官方高校专业选科目录与学生多次成绩排名，免费生成高中选科与就业分析白皮书。"
   />
   <link rel="icon" type="image/jpeg" href="/logo.jpg?v=2" />
-  <link rel="stylesheet" href="/styles.css?v=63" />
+  <link rel="stylesheet" href="/styles.css?v=64" />
   <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-K9LT3P6G"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -471,7 +471,33 @@
     </div>
   </dialog>
 
-  <script src="/app.js?v=41"></script>
+  <dialog id="pdf-guide-dialog" class="confirm-dialog" aria-labelledby="pdf-guide-title">
+    <div class="confirm-dialog-body">
+      <div class="confirm-dialog-head">
+        <h3 id="pdf-guide-title" class="confirm-dialog-title">微信内如何保存白皮书 / 导出 PDF</h3>
+        <button type="button" class="confirm-dialog-close" id="pdf-guide-close" aria-label="关闭" title="关闭">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <p class="confirm-dialog-desc" style="margin-bottom:12px;">
+        微信内置浏览器不支持直接调用系统打印导出 PDF，你可以选择以下任意一种方式保存或分享：
+      </p>
+      <ol class="pdf-guide-steps">
+        <li><strong>导出完整 PDF：</strong>点击微信右上角 <strong>「···」</strong> → 选择 <strong>「在默认浏览器中打开」</strong>，再点 <strong>「导出 PDF」</strong> 即可保存 A4 完整文档。</li>
+        <li><strong>直接发给家人：</strong>点击下方按钮一键复制选科摘要，直接粘贴到微信聊天。</li>
+      </ol>
+      <div id="pdf-copy-status" class="save-status" style="margin-bottom:12px;min-height:18px;" aria-live="polite"></div>
+      <div class="pdf-guide-actions">
+        <button type="button" class="btn btn-primary" id="btn-copy-summary">复制选科摘要</button>
+        <button type="button" class="btn btn-secondary" id="btn-copy-page-link">复制页面网址</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="/app.js?v=42"></script>
   <script>
     (function () {
       var btn = document.getElementById('btn-portal-nav-toggle');

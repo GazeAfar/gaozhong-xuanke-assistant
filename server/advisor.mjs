@@ -644,16 +644,16 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
         }
       }
       if (p.gradeRankCount >= 2 && p.avgGradeTopPct !== null) {
-        parts.push(`年排均位前 ${p.avgGradeTopPct}%（最近第 ${p.latestGradeRank} 名）`);
+        parts.push(`年级排名均位前 ${p.avgGradeTopPct}%（最近第 ${p.latestGradeRank} 名）`);
       } else if (p.latestGradeRank !== null) {
         const suffix = exams.length > 1 && p.gradeRankCount < exams.length ? `，仅第 ${p.latestGradeRankExamIndex} 次录入` : '';
-        parts.push(`年排第 ${p.latestGradeRank} 名${p.latestGradeTopPct !== null ? `（前 ${p.latestGradeTopPct}%${suffix}）` : suffix ? `（${suffix.slice(1)}）` : ''}`);
+        parts.push(`年级排名第 ${p.latestGradeRank} 名${p.latestGradeTopPct !== null ? `（前 ${p.latestGradeTopPct}%${suffix}）` : suffix ? `（${suffix.slice(1)}）` : ''}`);
       }
       if (p.classRankCount >= 2 && p.avgClassTopPct !== null) {
-        parts.push(`班排均位前 ${p.avgClassTopPct}%（最近第 ${p.latestClassRank} 名）`);
+        parts.push(`班级排名均位前 ${p.avgClassTopPct}%（最近第 ${p.latestClassRank} 名）`);
       } else if (p.latestClassRank !== null) {
         const suffix = exams.length > 1 && p.classRankCount < exams.length ? `，仅第 ${p.latestClassRankExamIndex} 次录入` : '';
-        parts.push(`班排第 ${p.latestClassRank} 名${p.latestClassTopPct !== null ? `（前 ${p.latestClassTopPct}%${suffix}）` : suffix ? `（${suffix.slice(1)}）` : ''}`);
+        parts.push(`班级排名第 ${p.latestClassRank} 名${p.latestClassTopPct !== null ? `（前 ${p.latestClassTopPct}%${suffix}）` : suffix ? `（${suffix.slice(1)}）` : ''}`);
       }
       if (p.trend && p.trend !== '单次参考' && p.trend !== '数据不足') parts.push(p.trend);
       scoreReasons.push(`${p.name}：${parts.join('，')}`);
@@ -697,11 +697,11 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
   const hasClassRank = ALL_SUBJECTS.some((s) => subjectProfiles[s].avgClassTopPct !== null);
   if (!hasGradeRank && !hasClassRank) {
     warnings.push(
-      '本次尚未录入「班级/年级人数 + 对应排名」，系统仅按原始分估算；由于江苏再选科目采用等级赋分，建议后续补充班排或年排以获得更贴近赋分规则的判断。'
+      '本次尚未录入「班级/年级人数 + 对应排名」，系统仅按原始分估算；由于江苏再选科目采用等级赋分，建议后续补充班级排名或年级排名以获得更贴近赋分规则的判断。'
     );
   } else if (!hasGradeRank && hasClassRank) {
     warnings.push(
-      '当前按「班级人数 + 班排」换算百分位，已比纯原始分更准确；如果学校后续公布「年级人数 + 年排」，补充进来会更贴近全省等级赋分。'
+      '当前按「班级人数 + 班级排名」换算百分位，已比纯原始分更准确；如果学校后续公布「年级人数 + 年级排名」，补充进来会更贴近全省等级赋分。'
     );
   }
 
