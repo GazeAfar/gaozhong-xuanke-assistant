@@ -320,41 +320,11 @@ function restoreSnapshot() {
   updateSaveStatus(`✓ 已恢复暂存成绩${state.studentName ? `（${state.studentName}）` : ''}`);
 }
 
-function encodeSharePayload() {
-  const compactExams = (state.exams || []).map((ex) => {
-    const out = {};
-    if (ex.name) out.n = ex.name;
-    if (ex.type) out.t = ex.type;
-    if (ex.classSize) out.cs = ex.classSize;
-    if (ex.gradeSize) out.gs = ex.gradeSize;
-    if (ex.totalScore) out.ts = ex.totalScore;
-    if (ex.totalClassRank) out.tcr = ex.totalClassRank;
-    if (ex.totalGradeRank) out.tgr = ex.totalGradeRank;
-    const core = {};
-    for (const c of CORE_SUBJECTS) {
-      const v = ex.coreSubjects?.[c.code];
-      if (v && (v.score || v.classRank || v.gradeRank)) {
-        core[c.code] = [v.score || '', v.classRank || '', v.gradeRank || ''];
-      }
-    }
-    if (Object.keys(core).length > 0) out.c = core;
-    const subj = {};
-    for (const s of SUBJECTS) {
-      const v = ex.subjects?.[s.code];
-      if (v && (v.score || v.classRank || v.gradeRank)) {
-        subj[s.code] = [v.score || '', v.classRank || '', v.gradeRank || ''];
-      }
-    }
-    if (Object.keys(subj).length > 0) out.s = subj;
-    return out;
-  });
-  const payload = {
-    v: 1,
-    y: state.examYear,
-    u: state.studentName || '',
-    e: compactExams,
-  };
-  const bytes = new TextEncoder().encode(JSON.stringify(payload));
+const EXAM_TYPES = ['月考', '期中考试', '期末考试', '联考'];
+const ALL_SHARE_CODES = [...CORE_SUBJECTS.map((c) => c.code), ...SUBJECTS.map((s) => s.code)];
+
+function toBase64Url(str) {
+  const bytes = new TextEncoder().encode(str);
   let bin = '';
   for (let i = 0; i < bytes.length; i += 1) {
     bin += String.fromCharCode(bytes[i]);
@@ -362,17 +332,97 @@ function encodeSharePayload() {
   return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
+function fromBase64Url(encoded) {
+  const b64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+  const pad = b64.length % 4 === 0 ? '' : '='.repeat(4 - (b64.length % 4));
+  const bin = atob(b64 + pad);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i += 1) {
+    bytes[i] = bin.charCodeAt(i);
+  }
+  return new TextDecoder().decode(bytes);
+}
+
+// 紧凑 v2 编码：大幅缩短网址长度（2次完整考试约 220 字符），确保微信完整识别为可点击链接
+function encodeSharePayload() {
+  const clean = (s) => String(s ?? '').replace(/[~;,|]/g, ' ').trim();
+  const trimTrail = (arr) => {
+    const out = arr.slice();
+    while (out.length > 0 && out[out.length - 1] === '') out.pop();
+    return out;
+  };
+  const header = `${state.examYear - 2000}|${clean(state.studentName)}`;
+  const examChunks = (state.exams || []).slice(0, 8).map((ex) => {
+    const typeIdx = EXAM_TYPES.indexOf(ex.type);
+    const meta = trimTrail([
+      clean(ex.name),
+      typeIdx >= 0 ? String(typeIdx) : '',
+      clean(ex.classSize),
+      clean(ex.gradeSize),
+      clean(ex.totalScore),
+      clean(ex.totalClassRank),
+      clean(ex.totalGradeRank),
+    ]).join(',');
+
+    const cells = trimTrail(
+      ALL_SHARE_CODES.map((code, idx) => {
+        const src = idx < CORE_SUBJECTS.length ? ex.coreSubjects?.[code] : ex.subjects?.[code];
+        return trimTrail([clean(src?.score), clean(src?.classRank), clean(src?.gradeRank)]).join('|');
+      })
+    ).join(',');
+
+    return `${meta};${cells}`;
+  });
+  return `2${toBase64Url(`${header}~${examChunks.join('~')}`)}`;
+}
+
 function decodeSharePayload(encoded) {
   if (!encoded || encoded.length > 16000) return null;
+  const validYears = new Set(getDynamicExamYearOptions().map((o) => o.year));
   try {
-    const b64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
-    const pad = b64.length % 4 === 0 ? '' : '='.repeat(4 - (b64.length % 4));
-    const bin = atob(b64 + pad);
-    const bytes = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i += 1) {
-      bytes[i] = bin.charCodeAt(i);
+    // v2 紧凑格式（以 "2" 开头）
+    if (encoded.startsWith('2')) {
+      const raw = fromBase64Url(encoded.slice(1));
+      const parts = raw.split('~');
+      if (parts.length < 2) return null;
+      const [yOff, studentName = ''] = parts[0].split('|');
+      const y = 2000 + Number(yOff);
+      const exams = parts.slice(1, 9).map((chunk, idx) => {
+        const ex = createEmptyExam(idx);
+        const [metaStr = '', cellsStr = ''] = chunk.split(';');
+        const meta = metaStr.split(',');
+        if (meta[0]) ex.name = meta[0].slice(0, 40);
+        if (meta[1] !== undefined && meta[1] !== '' && EXAM_TYPES[Number(meta[1])]) {
+          ex.type = EXAM_TYPES[Number(meta[1])];
+        }
+        if (meta[2]) ex.classSize = meta[2];
+        if (meta[3]) ex.gradeSize = meta[3];
+        if (meta[4]) ex.totalScore = meta[4];
+        if (meta[5]) ex.totalClassRank = meta[5];
+        if (meta[6]) ex.totalGradeRank = meta[6];
+
+        const cells = cellsStr ? cellsStr.split(',') : [];
+        ALL_SHARE_CODES.forEach((code, ci) => {
+          const item = (cells[ci] || '').split('|');
+          const obj = {
+            score: item[0] || '',
+            classRank: item[1] || '',
+            gradeRank: item[2] || '',
+          };
+          if (ci < CORE_SUBJECTS.length) ex.coreSubjects[code] = obj;
+          else ex.subjects[code] = obj;
+        });
+        return ex;
+      });
+      return {
+        studentName: String(studentName).slice(0, 20),
+        examYear: validYears.has(y) ? y : DEFAULT_EXAM_YEAR,
+        exams,
+      };
     }
-    const parsed = JSON.parse(new TextDecoder().decode(bytes));
+
+    // 兼容旧版 v1 JSON 格式
+    const parsed = JSON.parse(fromBase64Url(encoded));
     if (!parsed || !Array.isArray(parsed.e) || parsed.e.length === 0) return null;
     const exams = parsed.e.slice(0, 12).map((item, idx) => {
       const ex = createEmptyExam(idx);
@@ -409,7 +459,6 @@ function decodeSharePayload(encoded) {
       }
       return ex;
     });
-    const validYears = new Set(getDynamicExamYearOptions().map((o) => o.year));
     const y = Number(parsed.y);
     return {
       studentName: String(parsed.u || '').slice(0, 20),
