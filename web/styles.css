@@ -2182,10 +2182,11 @@ summary:focus:not(:focus-visible) {
 }
 
 .combo-link-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 3px;
-  padding: 11px 13px;
+  padding: 11px 28px 11px 13px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: var(--surface-subtle);
@@ -2193,9 +2194,26 @@ summary:focus:not(:focus-visible) {
   transition: border-color 150ms var(--ease-out), background-color 150ms var(--ease-out);
 }
 
+.combo-link-card::after {
+  content: "›";
+  position: absolute;
+  right: 11px;
+  top: 50%;
+  transform: translateY(-52%);
+  font-size: 18px;
+  line-height: 1;
+  color: #bfbfbf;
+  transition: color 150ms var(--ease-out), transform 150ms var(--ease-out);
+}
+
 .combo-link-card:hover {
   background: var(--primary-soft);
   border-color: var(--primary-border);
+}
+
+.combo-link-card:hover::after {
+  color: var(--primary-ink);
+  transform: translate(2px, -52%);
 }
 
 .combo-link-card strong {
@@ -2210,6 +2228,9 @@ summary:focus:not(:focus-visible) {
 .combo-link-card span {
   font-size: 12px;
   color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @media (max-width: 960px) {
