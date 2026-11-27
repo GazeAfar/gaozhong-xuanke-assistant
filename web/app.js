@@ -1339,7 +1339,6 @@ function renderReport(data) {
           <h3 class="doc-h3" style="margin:0;">推荐选科组合详解</h3>
           <div class="no-print" style="display:flex;gap:8px;">
             <button type="button" class="btn btn-secondary" id="btn-expand-all-recs">全部展开</button>
-            <button type="button" class="btn btn-ghost" id="btn-collapse-all-recs">只看首选</button>
           </div>
         </div>
         ${buildMetricExplainHtml('print-expand-details')}
@@ -1386,15 +1385,23 @@ function renderReport(data) {
   document.getElementById('btn-share-report-mobile')?.addEventListener('click', openShareModal);
   document.getElementById('btn-back-edit')?.addEventListener('click', () => switchView('section-input'));
   document.getElementById('btn-back-report')?.addEventListener('click', () => switchView('report-root'));
-  document.getElementById('btn-expand-all-recs')?.addEventListener('click', () => {
-    root.querySelectorAll('details.rec-card').forEach((d) => {
-      d.open = true;
+  const expandAllBtn = document.getElementById('btn-expand-all-recs');
+  const syncExpandAllLabel = () => {
+    if (!expandAllBtn) return;
+    const cards = Array.from(root.querySelectorAll('details.rec-card'));
+    const allOpen = cards.length > 0 && cards.every((d) => d.open);
+    expandAllBtn.textContent = allOpen ? '全部收起' : '全部展开';
+  };
+  expandAllBtn?.addEventListener('click', () => {
+    const cards = Array.from(root.querySelectorAll('details.rec-card'));
+    const allOpen = cards.length > 0 && cards.every((d) => d.open);
+    cards.forEach((d) => {
+      d.open = !allOpen;
     });
+    syncExpandAllLabel();
   });
-  document.getElementById('btn-collapse-all-recs')?.addEventListener('click', () => {
-    root.querySelectorAll('details.rec-card').forEach((d, idx) => {
-      d.open = idx === 0;
-    });
+  root.querySelectorAll('details.rec-card').forEach((d) => {
+    d.addEventListener('toggle', syncExpandAllLabel);
   });
   root.querySelectorAll('[data-explore-combo]').forEach((btn) => {
     btn.addEventListener('click', () => {
