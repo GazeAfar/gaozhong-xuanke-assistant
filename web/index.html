@@ -32,7 +32,7 @@
     content="面向全国高一学生与家长的免费新高考选科与就业分析工具，已上线江苏、湖北、河南、河北、湖南。"
   />
   <link rel="icon" type="image/jpeg" href="/logo.jpg?v=2" />
-  <link rel="stylesheet" href="/styles.css?v=71" />
+  <link rel="stylesheet" href="/styles.css?v=73" />
   <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-K9LT3P6G"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -99,115 +99,56 @@
         <p class="hint">不同省份的高考选科规则（3+1+2 / 3+3）、等级赋分方式以及高校专业要求都不一样，先选省份再分析更准确。</p>
       </div>
 
-      <!-- 已上线省份：高亮主卡片 -->
-      <div class="province-live-card">
-        <div class="province-live-info">
-          <div class="province-live-title-row">
-            <h3>江苏省</h3>
-            <span class="pill pill-success">已上线 · 3+1+2 模式</span>
-          </div>
-          <p class="province-live-desc">
-            已收录江苏省教育考试院公布的 <strong>79,753 条</strong>在苏招生高校专业选科要求，填入孩子平时的月考或期中期末成绩与排名，即可一键查看 12 种组合可报专业比例与未来就业方向。
-          </p>
-          <div class="province-quick-links">
-            <a href="/jiangsu/wuhuadi" class="pill" style="text-decoration:none;">物化地分析</a>
-            <a href="/jiangsu/wuhuasheng" class="pill" style="text-decoration:none;">物化生分析</a>
-            <a href="/jiangsu/wuhuazheng" class="pill" style="text-decoration:none;">物化政分析</a>
-            <a href="/jiangsu/shizhengdi" class="pill" style="text-decoration:none;">史政地分析</a>
-            <a href="/jiangsu/fufenzhi" class="pill" style="text-decoration:none;">江苏赋分制怎么算</a>
-          </div>
-        </div>
-        <div class="province-live-action">
-          <a href="/jiangsu" class="btn btn-primary btn-lg" style="text-decoration:none;">进入江苏选科分析 →</a>
-        </div>
+      <!-- 已上线省份：紧凑多列网格（适配多省扩展，PC 3 列 / 移动 2 列） -->
+      <div class="province-live-head">
+        <h3>已上线省份</h3>
+        <span class="pill pill-success">已覆盖 5 个高考大省 · 434,945 条官方专业</span>
       </div>
+      <div class="province-live-grid">
+        <a href="/jiangsu" class="province-live-tile">
+          <div class="province-live-tile-top">
+            <strong>江苏省</strong>
+            <span class="province-mode-tag">3+1+2</span>
+          </div>
+          <span class="province-live-count">79,753 条官方专业</span>
+          <span class="province-live-cta">进入选科分析 →</span>
+        </a>
 
-      <div class="province-live-card" style="margin-top:14px;">
-        <div class="province-live-info">
-          <div class="province-live-title-row">
-            <h3>湖北省</h3>
-            <span class="pill pill-success">已上线 · 3+1+2 模式</span>
+        <a href="/hubei" class="province-live-tile">
+          <div class="province-live-tile-top">
+            <strong>湖北省</strong>
+            <span class="province-mode-tag">3+1+2</span>
           </div>
-          <p class="province-live-desc">
-            已收录湖北省教育厅公布的 <strong>81,803 条</strong>在鄂招生高校专业选科要求，填入孩子平时的月考或期中期末成绩与排名，即可一键查看 12 种组合可报专业比例与未来就业方向。
-          </p>
-          <div class="province-quick-links">
-            <a href="/hubei/wuhuadi" class="pill" style="text-decoration:none;">物化地分析</a>
-            <a href="/hubei/wuhuasheng" class="pill" style="text-decoration:none;">物化生分析</a>
-            <a href="/hubei/wuhuazheng" class="pill" style="text-decoration:none;">物化政分析</a>
-            <a href="/hubei/shizhengdi" class="pill" style="text-decoration:none;">史政地分析</a>
-            <a href="/hubei/fufenzhi" class="pill" style="text-decoration:none;">湖北赋分制怎么算</a>
-          </div>
-        </div>
-        <div class="province-live-action">
-          <a href="/hubei" class="btn btn-primary btn-lg" style="text-decoration:none;">进入湖北选科分析 →</a>
-        </div>
-      </div>
+          <span class="province-live-count">81,803 条官方专业</span>
+          <span class="province-live-cta">进入选科分析 →</span>
+        </a>
 
-      <div class="province-live-card" style="margin-top:14px;">
-        <div class="province-live-info">
-          <div class="province-live-title-row">
-            <h3>河南省</h3>
-            <span class="pill pill-success">已上线 · 3+1+2 模式</span>
+        <a href="/henan" class="province-live-tile">
+          <div class="province-live-tile-top">
+            <strong>河南省</strong>
+            <span class="province-mode-tag">3+1+2</span>
           </div>
-          <p class="province-live-desc">
-            已收录河南省教育考试院公布的 <strong>96,437 条</strong>在豫招生高校专业选科要求，支持多次月考成绩与排名画像，一键生成河南专属选科白皮书与 12 组合覆盖率对比。
-          </p>
-          <div class="province-quick-links">
-            <a href="/henan/wuhuadi" class="pill" style="text-decoration:none;">物化地分析</a>
-            <a href="/henan/wuhuasheng" class="pill" style="text-decoration:none;">物化生分析</a>
-            <a href="/henan/wuhuazheng" class="pill" style="text-decoration:none;">物化政分析</a>
-            <a href="/henan/shizhengdi" class="pill" style="text-decoration:none;">史政地分析</a>
-            <a href="/henan/fufenzhi" class="pill" style="text-decoration:none;">河南赋分制怎么算</a>
-          </div>
-        </div>
-        <div class="province-live-action">
-          <a href="/henan" class="btn btn-primary btn-lg" style="text-decoration:none;">进入河南选科分析 →</a>
-        </div>
-      </div>
+          <span class="province-live-count">96,437 条官方专业</span>
+          <span class="province-live-cta">进入选科分析 →</span>
+        </a>
 
-      <div class="province-live-card" style="margin-top:14px;">
-        <div class="province-live-info">
-          <div class="province-live-title-row">
-            <h3>河北省</h3>
-            <span class="pill pill-success">已上线 · 3+1+2 模式</span>
+        <a href="/hebei" class="province-live-tile">
+          <div class="province-live-tile-top">
+            <strong>河北省</strong>
+            <span class="province-mode-tag">3+1+2</span>
           </div>
-          <p class="province-live-desc">
-            已收录河北省教育厅公布的 <strong>91,789 条</strong>在冀招生高校专业选科要求，结合河北五等级赋分逻辑与官方专业目录，帮高一家庭清晰对比 12 种组合。
-          </p>
-          <div class="province-quick-links">
-            <a href="/hebei/wuhuadi" class="pill" style="text-decoration:none;">物化地分析</a>
-            <a href="/hebei/wuhuasheng" class="pill" style="text-decoration:none;">物化生分析</a>
-            <a href="/hebei/wuhuazheng" class="pill" style="text-decoration:none;">物化政分析</a>
-            <a href="/hebei/shizhengdi" class="pill" style="text-decoration:none;">史政地分析</a>
-            <a href="/hebei/fufenzhi" class="pill" style="text-decoration:none;">河北赋分制怎么算</a>
-          </div>
-        </div>
-        <div class="province-live-action">
-          <a href="/hebei" class="btn btn-primary btn-lg" style="text-decoration:none;">进入河北选科分析 →</a>
-        </div>
-      </div>
+          <span class="province-live-count">91,789 条官方专业</span>
+          <span class="province-live-cta">进入选科分析 →</span>
+        </a>
 
-      <div class="province-live-card" style="margin-top:14px;">
-        <div class="province-live-info">
-          <div class="province-live-title-row">
-            <h3>湖南省</h3>
-            <span class="pill pill-success">已上线 · 3+1+2 模式</span>
+        <a href="/hunan" class="province-live-tile">
+          <div class="province-live-tile-top">
+            <strong>湖南省</strong>
+            <span class="province-mode-tag">3+1+2</span>
           </div>
-          <p class="province-live-desc">
-            已收录湖南省教育厅公布的 <strong>85,163 条</strong>在湘招生高校本专科专业选科要求，录入多次考试成绩与排名，一键生成湖南选科报告与就业趋势分析。
-          </p>
-          <div class="province-quick-links">
-            <a href="/hunan/wuhuadi" class="pill" style="text-decoration:none;">物化地分析</a>
-            <a href="/hunan/wuhuasheng" class="pill" style="text-decoration:none;">物化生分析</a>
-            <a href="/hunan/wuhuazheng" class="pill" style="text-decoration:none;">物化政分析</a>
-            <a href="/hunan/shizhengdi" class="pill" style="text-decoration:none;">史政地分析</a>
-            <a href="/hunan/fufenzhi" class="pill" style="text-decoration:none;">湖南赋分制怎么算</a>
-          </div>
-        </div>
-        <div class="province-live-action">
-          <a href="/hunan" class="btn btn-primary btn-lg" style="text-decoration:none;">进入湖南选科分析 →</a>
-        </div>
+          <span class="province-live-count">85,163 条官方专业</span>
+          <span class="province-live-cta">进入选科分析 →</span>
+        </a>
       </div>
 
       <!-- 陆续上线省份 -->
