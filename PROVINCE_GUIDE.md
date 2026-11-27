@@ -99,3 +99,16 @@
 5. **安全与测试验收**：
    - 严禁把个人测试草稿或 `.env` 提交到仓库（`data/runtime/` 已在 `.gitignore` 中忽略）。
    - 接入前运行 `npm test` 确保全部自动化校验与接口测试通过。
+
+---
+
+## 六、多省架构快速接入清单（适用于所有 3+1+2 省份）
+
+站点已完成前后端多省可扩展重构，后续新增 `3+1+2` 省份无需复制整页 HTML，仅需 4 步：
+
+1. **导入官方数据**：将省教育考试院/教育厅原始 `.xlsx` 放入 `data/raw/`，运行：
+   `python scripts/import-official-xlsx.py --input <xlsx> --output data/normalized/<code>-2027.json --province <CODE> --year 2027 --version <CODE>-2027.1 --source-id <SID>`
+   并新增 `data/normalized/<code>-2027-rule.json` 与 `data/normalized/sources.json` 记录。
+2. **注册省份配置**：在 `server/provinces.mjs` 的 `PROVINCE_REGISTRY` 中新增一条配置（自动激活 `/<slug>`、`/api/v1/report`、`/api/v1/majors`、`/<slug>/fufenzhi`、12 个组合详情页与 `/sitemap.xml`）。
+3. **生成二维码并更新入口**：运行 `python scripts/generate-qr-svg.py --url https://xuanke.visc.cn/<slug> --output web/qr-<slug>.svg`，将 `web/index.html` 中该省升级为「已上线」卡片，并同步更新 `web/llms.txt`。
+4. **补充测试与验收**：在 `tests/data-validation.test.mjs` 与 `tests/server.test.mjs` 增加新省全量校验用例，运行 `npm test` 全部通过后提交部署。

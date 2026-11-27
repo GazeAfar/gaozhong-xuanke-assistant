@@ -4,9 +4,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createMemoryStore } from './store.mjs';
 import { createActionDispatcher } from './handlers.mjs';
-import { evaluateExamsForJiangsu, COMBINATIONS } from './advisor.mjs';
+import { evaluateExamsForProvince, COMBINATIONS } from './advisor.mjs';
 import { generateCareerOutlook } from './ai-career.mjs';
 import { renderSeoPage, renderSitemapXml } from './seo-pages.mjs';
+import { renderProvinceWorkbenchPage } from './province-workbench.mjs';
+import { getProvinceBySlug, resolveProvince } from './provinces.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const webDir = path.resolve(__dirname, '..', 'web');
@@ -76,12 +78,19 @@ function readJsonBody(req) {
   });
 }
 
+const SECURITY_HEADERS = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'SAMEORIGIN',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+};
+
 function sendJson(res, statusCode, payload) {
   const body = JSON.stringify(payload);
   res.writeHead(statusCode, {
     'Content-Type': 'application/json; charset=utf-8',
     'Content-Length': Buffer.byteLength(body),
     'Cache-Control': 'no-store',
+    ...SECURITY_HEADERS,
   });
   res.end(body);
 }
@@ -137,11 +146,12 @@ export function createHttpServer(store) {
         ok: true,
         service: 'gaozhong-xuanke-web',
         ...store.getStats(),
+        provinces: store.getAllProvinceStats(),
       });
       return;
     }
 
-    // 新 Web 主接口：根据江苏多次月考/期末成绩生成选科建议 + 真实可报专业 + 毕业年就业预估
+    // 多省份 Web 主接口：根据多次月考/期末成绩生成选科建议 + 真实可报专业 + 毕业年就业预估
     // 公开部署安全策略：忽略前端传入的任意 aiConfig，防止 SSRF；仅使用内置引擎或服务端环境变量配置
     if (req.method === 'POST' && urlPath === '/api/v1/report') {
       if (!checkReportRate(getClientIp(req))) {
@@ -153,7 +163,12 @@ export function createHttpServer(store) {
       }
       try {
         const body = await readJsonBody(req);
-        const report = evaluateExamsForJiangsu(body, store.getComboMajorStats());
+        const provinceMeta = resolveProvince(body.province || body.provinceCode || 'JS');
+        const report = evaluateExamsForProvince(
+          body,
+          store.getComboMajorStats(provinceMeta.code),
+          provinceMeta
+        );
         const serverAiConfig = {
           baseUrl: process.env.AI_BASE_URL || '',
           model: process.env.AI_MODEL || '',
@@ -165,8 +180,8 @@ export function createHttpServer(store) {
           data: {
             report,
             careerOutlook,
-            sources: store.getAllSources(),
-            datasetStats: store.getStats(),
+            sources: store.getSourcesForProvince(provinceMeta.code),
+            datasetStats: store.getStats(provinceMeta.code),
           },
         });
       } catch (err) {
@@ -178,7 +193,7 @@ export function createHttpServer(store) {
       return;
     }
 
-    // 79,753 条真实江苏官方院校专业实时查询接口
+    // 多省份官方院校专业实时查询接口
     if (req.method === 'GET' && urlPath === '/api/v1/majors') {
       if (!checkMajorsRate(getClientIp(req))) {
         sendJson(res, 429, {
@@ -187,6 +202,9 @@ export function createHttpServer(store) {
         });
         return;
       }
+      const provinceMeta = resolveProvince(
+        parsedUrl.searchParams.get('province') || parsedUrl.searchParams.get('provinceCode') || 'JS'
+      );
       const q = (parsedUrl.searchParams.get('q') || '').trim().slice(0, 50);
       const combinationId = (parsedUrl.searchParams.get('combinationId') || '').trim();
       const level = (parsedUrl.searchParams.get('level') || '本科').trim();
@@ -195,6 +213,7 @@ export function createHttpServer(store) {
       const limit = Math.min(50, Math.max(1, Number(parsedUrl.searchParams.get('limit')) || 20));
 
       const raw = await store.searchOfferingsFiltered({
+        provinceCode: provinceMeta.code,
         q,
         level,
         offset: onlyEligible && combinationId ? 0 : offset,
@@ -216,6 +235,7 @@ export function createHttpServer(store) {
       sendJson(res, 200, {
         ok: true,
         data: {
+          provinceCode: provinceMeta.code,
           items,
           total,
           offset,
@@ -304,14 +324,37 @@ export function createHttpServer(store) {
       return;
     }
 
-    // 江苏省独立完整选科工作台（/jiangsu）
-    if (req.method === 'GET' && (urlPath === '/jiangsu' || urlPath === '/jiangsu/')) {
-      if (serveStaticFile(res, '/jiangsu.html')) {
+    // 多省份独立完整选科分析页（/<province-slug>，如 /jiangsu、/hubei）
+    if (req.method === 'GET') {
+      const cleanSlug = urlPath.replace(/^\/+|\/+$/g, '');
+      const provinceMeta = cleanSlug && !cleanSlug.includes('/') ? getProvinceBySlug(cleanSlug) : null;
+      if (provinceMeta) {
+        const siteOrigin = (process.env.SITE_URL || 'https://xuanke.visc.cn').replace(/\/+$/, '');
+        const html = renderProvinceWorkbenchPage(provinceMeta, store, siteOrigin);
+        res.writeHead(200, {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Content-Length': Buffer.byteLength(html),
+          'Cache-Control': 'no-cache',
+          'X-Content-Type-Options': 'nosniff',
+          'X-Frame-Options': 'SAMEORIGIN',
+          'Referrer-Policy': 'strict-origin-when-cross-origin',
+        });
+        res.end(html);
         return;
       }
     }
 
-    // 独立服务端直出（SSR）SEO 专题页与合规页：/fufenzhi、/jiangsu/<combo>、/privacy、/disclaimer、/contact
+    // 防止旧静态路径 /jiangsu.html 造成搜索引擎重复收录，301 规范跳转至 /jiangsu
+    if (req.method === 'GET' && urlPath === '/jiangsu.html') {
+      res.writeHead(301, {
+        Location: '/jiangsu',
+        ...SECURITY_HEADERS,
+      });
+      res.end();
+      return;
+    }
+
+    // 独立服务端直出（SSR）SEO 专题页与合规页：/fufenzhi、/<province>/fufenzhi、/<province>/<combo>、/privacy、/disclaimer、/contact
     if (req.method === 'GET') {
       const seoHtml = renderSeoPage(urlPath, store);
       if (seoHtml) {
@@ -319,6 +362,7 @@ export function createHttpServer(store) {
           'Content-Type': 'text/html; charset=utf-8',
           'Content-Length': Buffer.byteLength(seoHtml),
           'Cache-Control': 'public, max-age=600',
+          ...SECURITY_HEADERS,
         });
         res.end(seoHtml);
         return;

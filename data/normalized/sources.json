@@ -28,5 +28,15 @@
     "checkedAt": "2026-11-25",
     "sha256": "pending-raw-archive-hash",
     "usageNote": "提示从本省教育考试院查询对应年份选考科目要求，不构成其他年份规则的证据。"
+  },
+  {
+    "id": "S03",
+    "title": "2027年拟在鄂招生普通高校招生专业（类）选考科目要求汇总表",
+    "publisher": "湖北省教育厅",
+    "url": "https://jyt.hubei.gov.cn/",
+    "publishedAt": "2025-02-20",
+    "checkedAt": "2026-11-27",
+    "sha256": "b8c1b291c095dc30456946db945c367e7094491e20a7c55f31a3adba64f4fb1b",
+    "usageNote": "已核查并导入 2027 年湖北 3+1+2 普通高校 81,803 条专业选考科目要求；实际招生以当年计划为准。"
   }
 ]

@@ -113,7 +113,7 @@ def read_sheet1_rows(xlsx_path: str):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="将江苏 2027 官方选考科目要求 Excel 转为标准 JSON")
+    parser = argparse.ArgumentParser(description="将官方选考科目要求 Excel 转为标准 JSON")
     parser.add_argument(
         "--input",
         default=os.path.join("data", "raw", "2027年拟在江苏招生的普通高校专业选考科目要求汇总表.xlsx"),
@@ -127,6 +127,8 @@ def main():
     parser.add_argument("--province", default="JS")
     parser.add_argument("--year", type=int, default=2027)
     parser.add_argument("--version", default="JS-2027.1")
+    parser.add_argument("--source-id", default="S01")
+    parser.add_argument("--scope-note", default="")
     args = parser.parse_args()
 
     if not os.path.exists(args.input):
@@ -137,9 +139,20 @@ def main():
         sha256 = hashlib.sha256(f.read()).hexdigest()
 
     rows = read_sheet1_rows(args.input)
+
+    def find_col(hdrs, candidates):
+        for name in candidates:
+            if name in hdrs:
+                return hdrs.index(name)
+        return -1
+
     hdr_idx = -1
     for i in range(min(10, len(rows))):
-        if "院校代码" in rows[i] and "专业名称" in rows[i] and "选考科目要求" in rows[i]:
+        if (
+            find_col(rows[i], ["院校代码"]) >= 0
+            and find_col(rows[i], ["专业名称", "招生专业名称"]) >= 0
+            and find_col(rows[i], ["选考科目要求", "考试科目要求"]) >= 0
+        ):
             hdr_idx = i
             break
 
@@ -148,12 +161,12 @@ def main():
         sys.exit(1)
 
     headers = rows[hdr_idx]
-    idx_level = headers.index("层次")
-    idx_inst_code = headers.index("院校代码")
-    idx_inst_name = headers.index("院校名称")
-    idx_major_code = headers.index("专业代码")
-    idx_major_name = headers.index("专业名称")
-    idx_req = headers.index("选考科目要求")
+    idx_level = find_col(headers, ["层次"])
+    idx_inst_code = find_col(headers, ["院校代码"])
+    idx_inst_name = find_col(headers, ["院校名称"])
+    idx_major_code = find_col(headers, ["专业代码", "招生专业代码"])
+    idx_major_name = find_col(headers, ["专业名称", "招生专业名称"])
+    idx_req = find_col(headers, ["选考科目要求", "考试科目要求"])
 
     dataset_id = f"ds-{args.province.lower()}-{args.year}-{re.sub(r'[^a-z0-9]+', '-', args.version.lower()).strip('-')}"
 
@@ -165,9 +178,10 @@ def main():
     level_counter = Counter()
 
     for row_num, r in enumerate(rows[hdr_idx + 1 :], start=1):
-        if len(r) <= idx_req:
+        if len(r) <= max(idx_level, idx_inst_code, idx_inst_name, idx_major_code, idx_major_name, idx_req):
             continue
-        level = r[idx_level].strip()
+        raw_level = r[idx_level].strip()
+        level = "专科" if "专科" in raw_level or "高职" in raw_level else raw_level
         inst_code = r[idx_inst_code].strip()
         inst_name = r[idx_inst_name].strip()
         major_code = r[idx_major_code].strip() or None
@@ -207,6 +221,11 @@ def main():
             }
         )
 
+    scope_note = args.scope_note.strip() or (
+        f"依据官方公布的《{os.path.basename(args.input)}》整理（共 {len(offerings)} 条）。"
+        f"实际招生计划以 {args.year} 年官方公布为准。"
+    )
+
     bundle = {
         "dataset": {
             "id": dataset_id,
@@ -217,9 +236,9 @@ def main():
             "level": "本科/专科（普通高校）",
             "version": args.version,
             "status": "published",
-            "sourceIds": ["S01"],
+            "sourceIds": [args.source_id],
             "completeness": "full",
-            "scopeNote": f"依据江苏省教育厅2025年2月20日发布的《2027年拟在江苏招生的普通高校专业选考科目要求汇总表》普通高校表整理（共 {len(offerings)} 条，不含军队院校专项表）。实际招生计划以2027年官方公布为准。",
+            "scopeNote": scope_note,
             "rawSha256": sha256,
         },
         "offerings": offerings,

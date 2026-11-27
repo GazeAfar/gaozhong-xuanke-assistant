@@ -118,3 +118,41 @@ test('正式江苏 2027 全量库（js-2027.json）：全部 20 种表达式 × 
     }
   }
 });
+
+test('正式湖北 2027 全量库（hb-2027.json）：全部 24 种表达式 × 12 组合真值与生产校验通过', () => {
+  const realPath = path.join(rootDir, 'data', 'normalized', 'hb-2027.json');
+  assert.ok(fs.existsSync(realPath), '缺少 data/normalized/hb-2027.json');
+  const bundle = JSON.parse(fs.readFileSync(realPath, 'utf8'));
+  const report = validateDatasetBundle(bundle, sources, { targetEnv: 'prod' });
+  assert.equal(report.valid, true);
+  assert.equal(report.stats.unknownCount, 0);
+  assert.equal(bundle.offerings.length, 81803);
+
+  const hbRule = JSON.parse(
+    fs.readFileSync(path.join(rootDir, 'data', 'normalized', 'hb-2027-rule.json'), 'utf8')
+  );
+  const combos = generateCombinations(hbRule);
+
+  const seenExpr = new Map();
+  for (const off of bundle.offerings) {
+    if (!seenExpr.has(off.requirementRaw)) {
+      seenExpr.set(off.requirementRaw, off);
+    }
+  }
+  assert.equal(seenExpr.size, 24);
+
+  for (const [, sample] of seenExpr.entries()) {
+    for (const combo of combos) {
+      const st = matchOffering(combo.subjects, sample);
+      assert.ok(st === 'eligible' || st === 'ineligible', `正式库不应出现 unknown: ${sample.requirementRaw}`);
+      if (sample.requirementTree.type === 'NONE') {
+        assert.equal(st, 'eligible');
+      } else if (sample.requirementTree.type === 'ALL') {
+        const expected = sample.requirementTree.subjects.every((s) => combo.subjects.includes(s))
+          ? 'eligible'
+          : 'ineligible';
+        assert.equal(st, expected, `${sample.requirementRaw} vs ${combo.id}`);
+      }
+    }
+  }
+});

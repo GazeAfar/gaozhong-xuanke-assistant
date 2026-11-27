@@ -179,13 +179,21 @@ function round1(n) {
 }
 
 /**
- * 根据孩子多次月考/期中/期末成绩与排名，计算六科画像与 12 组合选科建议。
+ * 根据孩子多次月考/期中/期末成绩与排名，计算六科画像与 12 组合选科建议（支持任意 3+1+2 省份）。
  */
-export function evaluateExamsForJiangsu(payload, comboMajorStats) {
+export function evaluateExamsForProvince(payload, comboMajorStats, provinceMeta = null) {
+  const provName = provinceMeta?.name || '江苏';
+  const provFullName = provinceMeta?.fullName || '江苏省';
+  const provCode = provinceMeta?.code || 'JS';
+  const authorityName = provinceMeta?.authorityName || '江苏省教育考试院';
+  const sampleStats = Object.values(comboMajorStats || {})[0];
+  const totalOfferingsCount = sampleStats?.totalAll || 0;
+  const offeringsLabel = totalOfferingsCount > 0 ? `${totalOfferingsCount.toLocaleString('zh-CN')} 条` : '官方全量';
+
   const examYear = Number(payload.examYear) || 2029;
   const gradYear = examYear + 4;
   const studentName = String(payload.studentName || '').trim().slice(0, 20);
-  const exams = Array.isArray(payload.exams) ? payload.exams : [];
+  const exams = Array.isArray(payload.exams) ? payload.exams.slice(0, 20) : [];
 
   if (exams.length === 0) {
     throw new Error('请至少录入一次月考或期末考试成绩');
@@ -690,14 +698,14 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
   const warnings = [];
   if (examYear !== 2027) {
     warnings.push(
-      `目标为 ${examYear} 年江苏高考，当前专业选科覆盖统计参考江苏省教育考试院 2027 年官方汇总表（79,753 条），最终以 ${examYear} 年当年公布为准。`
+      `目标为 ${examYear} 年${provName}高考，当前专业选科覆盖统计参考${authorityName} 2027 年官方汇总表（${offeringsLabel}），最终以 ${examYear} 年当年公布为准。`
     );
   }
   const hasGradeRank = ALL_SUBJECTS.some((s) => subjectProfiles[s].avgGradeTopPct !== null);
   const hasClassRank = ALL_SUBJECTS.some((s) => subjectProfiles[s].avgClassTopPct !== null);
   if (!hasGradeRank && !hasClassRank) {
     warnings.push(
-      '本次尚未录入「班级/年级人数 + 对应排名」，系统仅按原始分估算；由于江苏再选科目采用等级赋分，建议后续补充班级排名或年级排名以获得更贴近赋分规则的判断。'
+      `本次尚未录入「班级/年级人数 + 对应排名」，系统仅按原始分估算；由于${provName}再选科目采用等级赋分，建议后续补充班级排名或年级排名以获得更贴近赋分规则的判断。`
     );
   } else if (!hasGradeRank && hasClassRank) {
     warnings.push(
@@ -706,8 +714,10 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
   }
 
   return {
-    province: '江苏省',
-    mode: '3+1+2',
+    provinceCode: provCode,
+    provinceName: provName,
+    province: provFullName,
+    mode: provinceMeta?.mode || '3+1+2',
     examYear,
     gradYear,
     masterGradYear: examYear + 7,
@@ -723,4 +733,9 @@ export function evaluateExamsForJiangsu(payload, comboMajorStats) {
     allCombinations: [...ranked, ...incomplete],
     warnings,
   };
+}
+
+/** 向后兼容导出别名 */
+export function evaluateExamsForJiangsu(payload, comboMajorStats) {
+  return evaluateExamsForProvince(payload, comboMajorStats, null);
 }

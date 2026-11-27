@@ -28,10 +28,33 @@ const DEFAULT_COMBOS = [
   { id: 'H_PG', displayName: '历史 · 思想政治 · 地理' },
 ];
 
-const STORAGE_KEY = 'js_xuanke_web_v1';
-const SNAPSHOT_STORAGE_KEY = 'js_xuanke_web_snapshot_v1';
-const REPORT_STORAGE_KEY = 'js_xuanke_web_report_v1';
-const VIEW_STORAGE_KEY = 'js_xuanke_web_view_v1';
+const PROVINCE_CONFIG = Object.assign(
+  {
+    code: 'JS',
+    slug: 'jiangsu',
+    name: '江苏',
+    fullName: '江苏省',
+    shortGeo: '在苏',
+    mode: '3+1+2',
+    offeringsCount: 79753,
+    offeringsStr: '79,753',
+    authorityName: '江苏省教育考试院',
+    authorityDept: '江苏省教育厅',
+    qrPath: '/qr-jiangsu.svg',
+    storagePrefix: 'js_xuanke_web',
+    siteOrigin: 'https://xuanke.visc.cn',
+    provinces: [
+      { code: 'JS', slug: 'jiangsu', name: '江苏', fullName: '江苏省' },
+      { code: 'HB', slug: 'hubei', name: '湖北', fullName: '湖北省' },
+    ],
+  },
+  typeof window !== 'undefined' && window.__PROVINCE_CONFIG__ ? window.__PROVINCE_CONFIG__ : {}
+);
+
+const STORAGE_KEY = `${PROVINCE_CONFIG.storagePrefix}_v1`;
+const SNAPSHOT_STORAGE_KEY = `${PROVINCE_CONFIG.storagePrefix}_snapshot_v1`;
+const REPORT_STORAGE_KEY = `${PROVINCE_CONFIG.storagePrefix}_report_v1`;
+const VIEW_STORAGE_KEY = `${PROVINCE_CONFIG.storagePrefix}_view_v1`;
 const VALID_VIEWS = new Set(['section-input', 'report-root', 'section-compare', 'major-explorer']);
 
 function getDynamicExamYearOptions() {
@@ -53,7 +76,7 @@ function getDynamicExamYearOptions() {
 const DEFAULT_EXAM_YEAR = getDynamicExamYearOptions()[0].year;
 
 const state = {
-  province: 'JS',
+  province: PROVINCE_CONFIG.code,
   studentName: '',
   examYear: DEFAULT_EXAM_YEAR,
   exams: [],
@@ -1213,12 +1236,18 @@ function renderReport(data) {
   `
     : '';
 
+  const offeringsStr = (datasetStats?.offeringsCount || PROVINCE_CONFIG.offeringsCount || 0).toLocaleString();
+  const provName = PROVINCE_CONFIG.name;
+  const provFullName = PROVINCE_CONFIG.fullName;
+  const provShortGeo = PROVINCE_CONFIG.shortGeo;
+  const provAuthority = PROVINCE_CONFIG.authorityName;
+
   const buildMetricExplainHtml = (extraClass = '') => `
     <details class="metric-explain-box ${extraClass}">
       <summary>指标说明：什么是「学科实力分」和「综合推荐指数」？</summary>
       <ul class="metric-explain-list">
-        <li><strong>学科实力分（满分 100）</strong>：不是简单把三科卷面分相加，而是贴合江苏等级赋分规则，按 <strong>60% 排名位置 + 40% 卷面加权均分</strong> 综合得出（近期明显上升 +1.5 分，有所下滑 -1.5 分）。因此<strong>卷子难、卷面分略低但排名靠前</strong>的科目，实力分会比<strong>分数略高但排名靠后</strong>的科目更高；未填排名的科目则按卷面分估算。</li>
-        <li><strong>本科可报占比</strong>：基于江苏省 79,753 条官方高校专业选科要求统计，反映该组合能报考多少比例的本科专业（例如含「物理+化学」的组合约 96%~97%，不含化学的物理组合约 50%）。</li>
+        <li><strong>学科实力分（满分 100）</strong>：不是简单把三科卷面分相加，而是贴合${escapeHtml(provName)}等级赋分规则，按 <strong>60% 排名位置 + 40% 卷面加权均分</strong> 综合得出（近期明显上升 +1.5 分，有所下滑 -1.5 分）。因此<strong>卷子难、卷面分略低但排名靠前</strong>的科目，实力分会比<strong>分数略高但排名靠后</strong>的科目更高；未填排名的科目则按卷面分估算。</li>
+        <li><strong>本科可报占比</strong>：基于${escapeHtml(provFullName)} ${escapeHtml(offeringsStr)} 条官方高校专业选科要求统计，反映该组合能报考多少比例的本科专业（例如含「物理+化学」的组合约 96%~97%，不含化学的物理组合约 50%）。</li>
         <li><strong>综合推荐指数（满分 100）</strong>：按 <strong>80% 学科实力分 + 20% 本科可报占比</strong> 综合计算，用于在「更容易拿高分」和「大学专业选择面更广」之间找平衡。所以有时某个组合实力分略高，但因可报本科专业少了一半，综合推荐指数就会偏低。</li>
       </ul>
     </details>
@@ -1229,9 +1258,9 @@ function renderReport(data) {
       <section class="report-header-card">
         <div class="report-header-top">
           <div>
-            <h2 class="report-title">${escapeHtml(titlePrefix)}江苏选科与就业白皮书</h2>
+            <h2 class="report-title">${escapeHtml(titlePrefix)}${escapeHtml(provName)}选科与就业白皮书</h2>
             <p class="hint">生成于 ${escapeHtml(generatedTime)} · 基于 ${report.examCount} 次考试记录</p>
-            <p class="report-meta-line">江苏 3+1+2 · ${report.examYear}年高考（本科 ${report.gradYear} / 读研 ${report.masterGradYear} 毕业） · 涵盖 ${datasetStats.offeringsCount.toLocaleString()} 个在苏高校专业</p>
+            <p class="report-meta-line">${escapeHtml(provName)} ${escapeHtml(PROVINCE_CONFIG.mode)} · ${report.examYear}年高考（本科 ${report.gradYear} / 读研 ${report.masterGradYear} 毕业） · 涵盖 ${escapeHtml(offeringsStr)} 个${escapeHtml(provShortGeo)}高校专业</p>
           </div>
           <div class="report-header-actions desktop-only no-print">
             <button type="button" class="btn btn-secondary" id="btn-back-edit">← 修改成绩</button>
@@ -1293,7 +1322,7 @@ function renderReport(data) {
       <div class="section-header">
         <div>
           <h2>全部 12 种组合横向对比</h2>
-          <p class="hint">按学科实力分与在苏招生本科专业覆盖率综合排序</p>
+          <p class="hint">按学科实力分与${escapeHtml(provShortGeo)}招生本科专业覆盖率综合排序</p>
         </div>
         <button type="button" class="btn btn-secondary desktop-only no-print" id="btn-back-report">← 返回白皮书</button>
       </div>
@@ -1316,7 +1345,7 @@ function renderReport(data) {
       </div>
       <div class="report-footer-note">
         <div><strong>官方数据来源：</strong>${escapeHtml(sourceLine)}</div>
-        <div style="margin-top:4px;"><strong>使用提示：</strong>本报告为家庭选科决策参考，不代表高考赋分预测或录取保证；实际招生计划及选考要求以高考当年江苏省教育考试院正式公布为准。</div>
+        <div style="margin-top:4px;"><strong>使用提示：</strong>本报告为家庭选科决策参考，不代表高考赋分预测或录取保证；实际招生计划及选考要求以高考当年${escapeHtml(provAuthority)}正式公布为准。</div>
       </div>
     </section>
   `;
@@ -1367,6 +1396,7 @@ async function searchMajors(append) {
   const offset = append ? state.majorSearchOffset : 0;
 
   const params = new URLSearchParams({
+    province: PROVINCE_CONFIG.code,
     q,
     combinationId,
     level,
@@ -1380,7 +1410,7 @@ async function searchMajors(append) {
   const moreBtn = document.getElementById('btn-load-more-majors');
 
   if (!append) {
-    metaEl.textContent = '正在查找在苏招生高校专业...';
+    metaEl.textContent = `正在查找${PROVINCE_CONFIG.shortGeo}招生高校专业...`;
   }
 
   try {
@@ -1438,17 +1468,17 @@ async function generateReport() {
   showError('');
   const btn = document.getElementById('btn-generate');
   btn.disabled = true;
-  btn.textContent = '正在分析成绩、匹配 79,753 条官方专业并生成就业研判...';
+  btn.textContent = `正在分析成绩、匹配 ${PROVINCE_CONFIG.offeringsStr} 条官方专业并生成就业研判...`;
 
   try {
     const res = await fetch('/api/v1/report', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        province: PROVINCE_CONFIG.code,
         studentName: state.studentName,
         examYear: state.examYear,
         exams: state.exams,
-        aiConfig: state.aiConfig,
       }),
     });
     const json = await res.json();
@@ -1476,9 +1506,17 @@ function bindEvents() {
   const aiKey = document.getElementById('ai-api-key');
 
   if (provinceSelect) {
-    provinceSelect.value = state.province || 'JS';
+    provinceSelect.value = PROVINCE_CONFIG.code;
     provinceSelect.addEventListener('change', () => {
-      state.province = provinceSelect.value || 'JS';
+      const targetCode = provinceSelect.value || PROVINCE_CONFIG.code;
+      if (targetCode !== PROVINCE_CONFIG.code) {
+        const target = (PROVINCE_CONFIG.provinces || []).find((p) => p.code === targetCode);
+        if (target && target.slug) {
+          window.location.href = `/${target.slug}`;
+          return;
+        }
+      }
+      state.province = targetCode;
       saveState();
     });
   }
@@ -1740,7 +1778,7 @@ function buildShareLinkBundle() {
   const titlePrefix = report.studentName ? `${report.studentName} · ` : '';
   const top1 = report.recommendations?.[0];
   const lines = [
-    `【${titlePrefix}江苏 3+1+2 选科分析报告】`,
+    `【${titlePrefix}${PROVINCE_CONFIG.name} ${PROVINCE_CONFIG.mode} 选科分析报告】`,
     `${report.examYear}年高考（${report.gradYear}年本科毕业） · 基于 ${report.examCount} 次考试`,
   ];
   if (top1) {
@@ -1804,7 +1842,7 @@ async function generateSharePosterDataUrl() {
   const { report, datasetStats } = data;
   const [logoImg, qrImg] = await Promise.all([
     loadLocalImage('/logo.jpg?v=2'),
-    loadLocalImage('/qr-jiangsu.svg?v=1'),
+    loadLocalImage(`${PROVINCE_CONFIG.qrPath}?v=1`),
   ]);
 
   const W = 750;
@@ -1870,10 +1908,10 @@ async function generateSharePosterDataUrl() {
   }
   ctx.fillStyle = '#262626';
   ctx.font = `700 24px ${FONT}`;
-  ctx.fillText('高中选科助手 · 江苏', PAD + (logoImg ? 56 : 0), curY + 30);
+  ctx.fillText(`高中选科助手 · ${PROVINCE_CONFIG.name}`, PAD + (logoImg ? 56 : 0), curY + 30);
 
   // Right tag
-  const modeTag = `${report.examYear}年高考 · 3+1+2`;
+  const modeTag = `${report.examYear}年高考 · ${PROVINCE_CONFIG.mode}`;
   ctx.font = `600 20px ${FONT}`;
   const tagW = ctx.measureText(modeTag).width + 26;
   drawRoundedRect(ctx, W - PAD - tagW, curY + 6, tagW, 34, 8);
@@ -1888,7 +1926,7 @@ async function generateSharePosterDataUrl() {
   // Report main title
   curY = 128;
   const titlePrefix = report.studentName ? `${report.studentName} · ` : '';
-  const mainTitle = `${titlePrefix}江苏选科分析报告`;
+  const mainTitle = `${titlePrefix}${PROVINCE_CONFIG.name}选科分析报告`;
   ctx.fillStyle = '#1f2937';
   ctx.font = `700 34px ${FONT}`;
   ctx.fillText(mainTitle, PAD, curY);
@@ -1897,8 +1935,9 @@ async function generateSharePosterDataUrl() {
   curY += 38;
   ctx.fillStyle = '#595959';
   ctx.font = `400 21px ${FONT}`;
+  const posterOfferingsStr = (datasetStats?.offeringsCount || PROVINCE_CONFIG.offeringsCount || 0).toLocaleString();
   ctx.fillText(
-    `基于 ${report.examCount} 次考试记录 · 涵盖 ${(datasetStats?.offeringsCount || 79753).toLocaleString()} 条在苏高校专业要求`,
+    `基于 ${report.examCount} 次考试记录 · 涵盖 ${posterOfferingsStr} 条${PROVINCE_CONFIG.shortGeo}高校专业要求`,
     PAD,
     curY
   );
@@ -2095,15 +2134,15 @@ async function generateSharePosterDataUrl() {
 
   ctx.fillStyle = '#262626';
   ctx.font = `700 23px ${FONT}`;
-  ctx.fillText('长按识别二维码 · 进入江苏选科助手', PAD + 20, curY + 42);
+  ctx.fillText(`长按识别二维码 · 进入${PROVINCE_CONFIG.name}选科助手`, PAD + 20, curY + 42);
 
   ctx.fillStyle = '#007a47';
   ctx.font = `600 20px ${FONT}`;
-  ctx.fillText('https://xuanke.visc.cn/jiangsu', PAD + 20, curY + 76);
+  ctx.fillText(`${PROVINCE_CONFIG.siteOrigin}/${PROVINCE_CONFIG.slug}`, PAD + 20, curY + 76);
 
   ctx.fillStyle = '#8c8c8c';
   ctx.font = `400 18px ${FONT}`;
-  ctx.fillText('查全部 12 组合对比与 79,753 条高校专业要求', PAD + 20, curY + 108);
+  ctx.fillText(`查全部 12 组合对比与 ${posterOfferingsStr} 条高校专业要求`, PAD + 20, curY + 108);
 
   if (qrImg) {
     drawRoundedRect(ctx, qrX - 4, qrY - 4, qrSize + 8, qrSize + 8, 8);
@@ -2116,7 +2155,7 @@ async function generateSharePosterDataUrl() {
   }
 
   curY += footerCardH + 34;
-  const disclaimerTxt = '本报告仅供家庭选科决策参考，最终招生要求以江苏省教育考试院当年公布为准';
+  const disclaimerTxt = `本报告仅供家庭选科决策参考，最终招生要求以${PROVINCE_CONFIG.authorityName}当年公布为准`;
   ctx.fillStyle = '#8c8c8c';
   ctx.font = `400 17px ${FONT}`;
   const dw = ctx.measureText(disclaimerTxt).width;
@@ -2215,7 +2254,7 @@ function initShareModal() {
     }
     const a = document.createElement('a');
     const namePrefix = state.studentName ? `${state.studentName}-` : '';
-    a.download = `${namePrefix}江苏选科分析报告.png`;
+    a.download = `${namePrefix}${PROVINCE_CONFIG.name}选科分析报告.png`;
     a.href = lastPosterDataUrl;
     document.body.appendChild(a);
     a.click();
@@ -2239,7 +2278,7 @@ function buildReportTextSummary() {
   if (!report) return '';
   const titlePrefix = report.studentName ? `${report.studentName} · ` : '';
   const lines = [
-    `【${titlePrefix}江苏选科与就业分析摘要】`,
+    `【${titlePrefix}${PROVINCE_CONFIG.name}选科与就业分析摘要】`,
     `${report.examYear}年高考（${report.gradYear}年本科毕业） · 基于 ${report.examCount} 次考试`,
     '',
     '▶ 推荐选科前三组：',
@@ -2250,7 +2289,7 @@ function buildReportTextSummary() {
       `${rec.rank}. ${rec.displayName}（${rec.badge}）| 学科实力 ${rec.academicScore} · 本科可报 ${pct}% · 综合 ${rec.compositeScore}`
     );
   });
-  lines.push('', '详细白皮书与 79,753 条专业查询：https://xuanke.visc.cn/jiangsu');
+  lines.push('', `详细白皮书与 ${PROVINCE_CONFIG.offeringsStr} 条专业查询：${PROVINCE_CONFIG.siteOrigin}/${PROVINCE_CONFIG.slug}`);
   return lines.join('\n');
 }
 

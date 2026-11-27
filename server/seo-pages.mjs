@@ -1,4 +1,5 @@
 import { COMBINATIONS } from './advisor.mjs';
+import { PROVINCE_REGISTRY, getProvinceBySlug } from './provinces.mjs';
 
 export const COMBO_SEO_META = [
   { id: 'P_CB', slug: 'wuhuasheng', shortName: '物化生', tag: '传统全理 · 专业最全' },
@@ -30,21 +31,43 @@ function escapeHtml(str) {
 
 const DEFAULT_SITE_ORIGIN = 'https://xuanke.visc.cn';
 
-function renderLayout({ title, description, keywords, jsonLd, bodyHtml, canonicalPath, siteOrigin = DEFAULT_SITE_ORIGIN }) {
+function renderLayout({
+  title,
+  description,
+  keywords,
+  jsonLd,
+  bodyHtml,
+  canonicalPath,
+  provinceMeta = null,
+  offeringsCount = 0,
+  siteOrigin = DEFAULT_SITE_ORIGIN,
+}) {
   const origin = String(siteOrigin || DEFAULT_SITE_ORIGIN).replace(/\/+$/, '');
   const canonicalHref = `${origin}${canonicalPath}`;
-  const isJiangsuPage = canonicalPath.startsWith('/jiangsu');
+  const prov =
+    provinceMeta ||
+    PROVINCE_REGISTRY.find(
+      (p) => canonicalPath === `/${p.slug}` || canonicalPath.startsWith(`/${p.slug}/`)
+    ) ||
+    null;
 
-  const brandHref = isJiangsuPage ? '/jiangsu' : '/';
-  const brandLinkTitle = isJiangsuPage ? '返回江苏选科首页' : '返回全国首页';
-  const brandTitle = isJiangsuPage ? '高中选科助手 · 江苏' : '高中选科助手';
-  const brandSubtitle = isJiangsuPage
-    ? '江苏省 3+1+2 选科与就业分析 · 79,753 个官方专业要求'
+  const isProvincePage = Boolean(prov);
+  const provSlug = prov ? prov.slug : 'jiangsu';
+  const provName = prov ? prov.name : '';
+  const provFullName = prov ? prov.fullName : '';
+  const provMode = prov ? prov.mode : '3+1+2';
+  const countStr = offeringsCount > 0 ? `${offeringsCount.toLocaleString('zh-CN')} 个官方专业要求` : '官方高校专业选科库';
+
+  const brandHref = isProvincePage ? `/${provSlug}` : '/';
+  const brandLinkTitle = isProvincePage ? `返回${provName}选科首页` : '返回全国首页';
+  const brandTitle = isProvincePage ? `高中选科助手 · ${provName}` : '高中选科助手';
+  const brandSubtitle = isProvincePage
+    ? `${provFullName} ${provMode} 选科与就业分析 · ${countStr}`
     : '新高考智能选科、专业覆盖率与就业趋势分析';
 
-  const headerNavHtml = isJiangsuPage
+  const headerNavHtml = isProvincePage
     ? `
-      <nav class="main-nav" id="main-nav" aria-label="江苏选科导航">
+      <nav class="main-nav" id="main-nav" aria-label="${escapeHtml(provName)}选科导航">
         <a href="/" class="nav-item" style="text-decoration:none;">
           <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -52,14 +75,14 @@ function renderLayout({ title, description, keywords, jsonLd, bodyHtml, canonica
           </svg>
           <span>首页</span>
         </a>
-        <a href="/jiangsu#section-input" class="nav-item" style="text-decoration:none;">
+        <a href="/${provSlug}#section-input" class="nav-item" style="text-decoration:none;">
           <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
           </svg>
           <span>成绩录入</span>
         </a>
-        <a href="/jiangsu#report-root" class="nav-item" style="text-decoration:none;">
+        <a href="/${provSlug}#report-root" class="nav-item" style="text-decoration:none;">
           <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
@@ -68,7 +91,7 @@ function renderLayout({ title, description, keywords, jsonLd, bodyHtml, canonica
           </svg>
           <span>选科报告</span>
         </a>
-        <a href="/jiangsu#section-compare" class="nav-item" style="text-decoration:none;">
+        <a href="/${provSlug}#section-compare" class="nav-item" style="text-decoration:none;">
           <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <line x1="18" y1="20" x2="18" y2="10"></line>
             <line x1="12" y1="20" x2="12" y2="4"></line>
@@ -76,7 +99,7 @@ function renderLayout({ title, description, keywords, jsonLd, bodyHtml, canonica
           </svg>
           <span>组合对比</span>
         </a>
-        <a href="/jiangsu#major-explorer" class="nav-item" style="text-decoration:none;">
+        <a href="/${provSlug}#major-explorer" class="nav-item" style="text-decoration:none;">
           <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -86,7 +109,7 @@ function renderLayout({ title, description, keywords, jsonLd, bodyHtml, canonica
       </nav>
 
       <div class="topbar-actions">
-        <a href="/jiangsu" class="btn btn-primary" style="text-decoration:none;">去录入成绩</a>
+        <a href="/${provSlug}" class="btn btn-primary" style="text-decoration:none;">去录入成绩</a>
         <button type="button" class="nav-toggle portal-nav-toggle" id="btn-portal-nav-toggle" aria-label="展开站点导航" aria-expanded="false" aria-controls="portal-nav">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -96,12 +119,12 @@ function renderLayout({ title, description, keywords, jsonLd, bodyHtml, canonica
         </button>
       </div>
 
-      <nav class="main-nav portal-nav workbench-global-nav" id="portal-nav" aria-label="江苏选科导航">
+      <nav class="main-nav portal-nav workbench-global-nav" id="portal-nav" aria-label="${escapeHtml(provName)}选科导航">
         <a href="/" class="nav-item" style="text-decoration:none;">首页</a>
-        <a href="/jiangsu#section-input" class="nav-item" style="text-decoration:none;">成绩录入</a>
-        <a href="/jiangsu#report-root" class="nav-item" style="text-decoration:none;">选科报告</a>
-        <a href="/jiangsu#section-compare" class="nav-item" style="text-decoration:none;">组合对比</a>
-        <a href="/jiangsu#major-explorer" class="nav-item" style="text-decoration:none;">院校专业</a>
+        <a href="/${provSlug}#section-input" class="nav-item" style="text-decoration:none;">成绩录入</a>
+        <a href="/${provSlug}#report-root" class="nav-item" style="text-decoration:none;">选科报告</a>
+        <a href="/${provSlug}#section-compare" class="nav-item" style="text-decoration:none;">组合对比</a>
+        <a href="/${provSlug}#major-explorer" class="nav-item" style="text-decoration:none;">院校专业</a>
       </nav>`
     : `
       <nav class="main-nav portal-nav" id="portal-nav" aria-label="专题导航">
@@ -183,11 +206,22 @@ function renderLayout({ title, description, keywords, jsonLd, bodyHtml, canonica
         <div class="footer-links-col">
           <h4>选科专题与指南</h4>
           <ul>
-            <li><a href="/jiangsu" class="footer-link-btn">江苏 3+1+2 选科专题</a></li>
-            <li><a href="/fufenzhi" class="footer-link-btn">新高考等级赋分制详解</a></li>
-            <li><a href="/jiangsu/wuhuadi" class="footer-link-btn">物化地专业覆盖率分析</a></li>
-            <li><a href="/jiangsu/wuhuasheng" class="footer-link-btn">物化生专业覆盖率分析</a></li>
-            <li><a href="/jiangsu/shizhengdi" class="footer-link-btn">史政地专业覆盖率分析</a></li>
+            ${
+              isProvincePage
+                ? `
+            <li><a href="/${provSlug}" class="footer-link-btn">${escapeHtml(provName)} ${escapeHtml(provMode)} 选科分析</a></li>
+            <li><a href="/${provSlug}/fufenzhi" class="footer-link-btn">${escapeHtml(provName)}等级赋分制详解</a></li>
+            <li><a href="/${provSlug}/wuhuadi" class="footer-link-btn">物化地专业覆盖率分析</a></li>
+            <li><a href="/${provSlug}/wuhuasheng" class="footer-link-btn">物化生专业覆盖率分析</a></li>
+            <li><a href="/${provSlug}/shizhengdi" class="footer-link-btn">史政地专业覆盖率分析</a></li>`
+                : `
+            <li><a href="/#province-picker" class="footer-link-btn">按省份选择选科工具</a></li>
+            <li><a href="/modes" class="footer-link-btn">新高考 3+1+2 与 3+3 模式详解</a></li>
+            <li><a href="/fufenzhi" class="footer-link-btn">全国新高考等级赋分制详解</a></li>
+            ${PROVINCE_REGISTRY.map(
+              (p) => `<li><a href="/${p.slug}" class="footer-link-btn">${escapeHtml(p.name)} ${escapeHtml(p.mode)} 选科分析</a></li>`
+            ).join('\n            ')}`
+            }
           </ul>
         </div>
 
@@ -330,27 +364,34 @@ function renderJiangsuHubPage(store) {
   });
 }
 
-function renderJiangsuFufenzhiPage() {
-  const title = '江苏省高考等级赋分制详解（3+1+2五等级比例、换算公式与实例）- 高中选科助手';
-  const description =
-    '专为江苏高一学生与家长整理的江苏省 3+1+2 等级赋分制详解：完整介绍化学、生物、政治、地理五等级（A/B/C/D/E）比例、100~30 分赋分区间、等比例转换计算公式及真题举例。';
-  const keywords = '江苏等级赋分制,江苏赋分制怎么算,江苏3+1+2赋分对照表,江苏高考赋分公式,江苏高一选科';
+function renderProvinceFufenzhiPage(provinceMeta, store) {
+  const { slug, name, fullName, mode, grades } = provinceMeta;
+  const dsStats = store.getStats(provinceMeta.code);
+  const title = `${fullName}高考等级赋分制详解（${mode}五等级比例、换算公式与实例）- 高中选科助手`;
+  const description = `专为${name}高一学生与家长整理的${fullName} ${mode} 等级赋分制详解：完整介绍化学、生物、政治、地理五等级（A/B/C/D/E）比例、100~30 分赋分区间、等比例转换计算公式及真题举例。`;
+  const keywords = `${name}等级赋分制,${name}赋分制怎么算,${name}3+1+2赋分对照表,${name}高考赋分公式,${name}高一选科`;
+
+  const gradeHead = grades.map((g) => `<th>${escapeHtml(g.grade)} 等级</th>`).join('');
+  const gradeRank = grades.map((g) => `<td>${escapeHtml(g.rankRange)}</td>`).join('');
+  const gradeScore = grades
+    .map((g, i) => `<td>${i === 0 ? `<strong>${escapeHtml(g.scoreRange)}</strong>` : escapeHtml(g.scoreRange)}</td>`)
+    .join('');
 
   const bodyHtml = `
     <article class="doc-sheet report-doc">
       <div class="report-header-card">
         <div class="report-header-top">
           <div>
-            <p class="hint" style="margin-bottom:6px;"><a href="/" style="color:var(--muted);text-decoration:none;">首页</a> / <a href="/jiangsu" style="color:var(--muted);text-decoration:none;">江苏选科分析</a> / 江苏等级赋分制详解</p>
-            <h2 class="report-title">江苏省高考「等级赋分制」详解与换算实例</h2>
-            <p class="hint">面向江苏高一学生与家长的大白话指南 · 搞懂化学、生物、政治、地理最终得分怎么来</p>
+            <p class="hint" style="margin-bottom:6px;"><a href="/" style="color:var(--muted);text-decoration:none;">首页</a> / <a href="/${escapeHtml(slug)}" style="color:var(--muted);text-decoration:none;">${escapeHtml(name)}选科分析</a> / ${escapeHtml(name)}等级赋分制详解</p>
+            <h2 class="report-title">${escapeHtml(fullName)}高考「等级赋分制」详解与换算实例</h2>
+            <p class="hint">面向${escapeHtml(name)}高一学生与家长的大白话指南 · 搞懂化学、生物、政治、地理最终得分怎么来</p>
           </div>
-          <a href="/jiangsu" class="btn btn-primary" style="text-decoration:none;">去江苏选科分析测算 →</a>
+          <a href="/${escapeHtml(slug)}" class="btn btn-primary" style="text-decoration:none;">去${escapeHtml(name)}选科分析测算 →</a>
         </div>
       </div>
 
       <section class="doc-section">
-        <h3 class="doc-h3">一、江苏高考 750 分里，哪些科目要赋分？</h3>
+        <h3 class="doc-h3">一、${escapeHtml(name)}高考 750 分里，哪些科目要赋分？</h3>
         <ul class="policy-list">
           <li><strong>不赋分（550 分 · 考多少算多少）</strong>：语文（150）、数学（150）、外语（150）以及首选科目「物理」或「历史」（100），全部直接按卷面原始分计入总分。</li>
           <li><strong>必须赋分（200 分 · 按全省排名折算）</strong>：在<strong>化学、生物学、思想政治、地理</strong> 4 门中选考的 2 门（每门满分 100 分），不按卷面分直接相加，而是按全省选考同一科目的考生排名进行五等级赋分。</li>
@@ -358,35 +399,23 @@ function renderJiangsuFufenzhiPage() {
       </section>
 
       <section class="doc-section">
-        <h3 class="doc-h3">二、江苏省五等级人数比例与赋分区间表</h3>
+        <h3 class="doc-h3">二、${escapeHtml(fullName)}五等级人数比例与赋分区间表</h3>
         <div class="table-wrap">
           <table class="data-table grade-table">
             <thead>
               <tr>
                 <th>等级</th>
-                <th>A 等级</th>
-                <th>B 等级</th>
-                <th>C 等级</th>
-                <th>D 等级</th>
-                <th>E 等级</th>
+                ${gradeHead}
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td><strong>全省排名比例</strong></td>
-                <td>前 15%</td>
-                <td>15% ~ 50%</td>
-                <td>50% ~ 85%</td>
-                <td>85% ~ 98%</td>
-                <td>后 2%</td>
+                ${gradeRank}
               </tr>
               <tr>
                 <td><strong>转换赋分区间(分)</strong></td>
-                <td><strong>100 ~ 86</strong></td>
-                <td>85 ~ 71</td>
-                <td>70 ~ 56</td>
-                <td>55 ~ 41</td>
-                <td>40 ~ 30</td>
+                ${gradeScore}
               </tr>
             </tbody>
           </table>
@@ -394,14 +423,14 @@ function renderJiangsuFufenzhiPage() {
       </section>
 
       <section class="doc-section">
-        <h3 class="doc-h3">三、江苏赋分是怎么一步步算出来的？（附真实例子）</h3>
+        <h3 class="doc-h3">三、${escapeHtml(name)}赋分是怎么一步步算出来的？（附真实例子）</h3>
         <p class="policy-desc" style="margin-bottom:12px;">
-          江苏省采用<strong>等比例转换公式</strong>：先把全省同科考生的原始分按比例划进 A~E 五个等级，再根据孩子原始分在本等级里的相对位置，按比例映射到对应的赋分区间（四舍五入取整）。
+          ${escapeHtml(fullName)}采用<strong>等比例转换公式</strong>：先把全省同科考生的原始分按比例划进 A~E 五个等级，再根据孩子原始分在本等级里的相对位置，按比例映射到对应的赋分区间（四舍五入取整）。
         </p>
         <div class="policy-card policy-card-main">
-          <h3>举个江苏家长一看就懂的例子</h3>
+          <h3>举个${escapeHtml(name)}家长一看就懂的例子</h3>
           <p class="policy-desc">
-            假设某年江苏高考<strong>化学</strong>试卷偏难，全省选化学的考生中，前 15%（A 等级）的卷面原始分落在 <strong>74 分 ~ 96 分</strong>之间。孩子卷面考了 <strong>80 分</strong>（落在 A 等级内）：<br/>
+            假设某年${escapeHtml(name)}高考<strong>化学</strong>试卷偏难，全省选化学的考生中，前 15%（A 等级）的卷面原始分落在 <strong>74 分 ~ 96 分</strong>之间。孩子卷面考了 <strong>80 分</strong>（落在 A 等级内）：<br/>
             按照等比例公式换算：<code>(96 - 80) ÷ (80 - 74) = (100 - 最终赋分) ÷ (最终赋分 - 86)</code>，算出来最终高考化学得分约 <strong>90 分</strong>（比卷面还高了 10 分！）。<br/>
             反之，如果某门选考卷子特别简单，大家普遍考 90 分，卷面 85 分可能只排在 B 等级，赋分后反而会比卷面略低。
           </p>
@@ -409,10 +438,10 @@ function renderJiangsuFufenzhiPage() {
       </section>
 
       <section class="doc-section">
-        <h3 class="doc-h3">四、给江苏高一选科的 2 条实用建议</h3>
+        <h3 class="doc-h3">四、给${escapeHtml(name)}高一选科的 2 条实用建议</h3>
         <ul class="policy-list">
-          <li><strong>看排名比看卷面分更靠谱</strong>：因为赋分看的是相对位次，在 <a href="/jiangsu" style="color:var(--primary-ink);font-weight:600;">江苏选科分析</a> 中录入孩子多次月考/期中期末的「班级排名 / 年级排名」，比只填分数更能反映真实赋分潜力。</li>
-          <li><strong>兼顾专业覆盖率</strong>：如果孩子物理、化学排名稳健，优先保留「物理+化学」可覆盖江苏 95% 以上本科专业；也可查看 <a href="/fufenzhi" style="color:var(--primary-ink);font-weight:600;">全国各省赋分制对比</a> 了解更多模式差异。</li>
+          <li><strong>看排名比看卷面分更靠谱</strong>：因为赋分看的是相对位次，在 <a href="/${escapeHtml(slug)}" style="color:var(--primary-ink);font-weight:600;">${escapeHtml(name)}选科分析</a> 中录入孩子多次月考/期中期末的「班级排名 / 年级排名」，比只填分数更能反映真实赋分潜力。</li>
+          <li><strong>兼顾专业覆盖率</strong>：如果孩子物理、化学排名稳健，优先保留「物理+化学」可覆盖${escapeHtml(name)} 95% 以上本科专业；也可查看 <a href="/fufenzhi" style="color:var(--primary-ink);font-weight:600;">全国各省赋分制对比</a> 了解更多模式差异。</li>
         </ul>
       </section>
     </article>
@@ -422,7 +451,9 @@ function renderJiangsuFufenzhiPage() {
     title,
     description,
     keywords,
-    canonicalPath: '/jiangsu/fufenzhi',
+    canonicalPath: `/${slug}/fufenzhi`,
+    provinceMeta,
+    offeringsCount: dsStats.offeringsCount,
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'Article',
@@ -581,15 +612,17 @@ function renderFufenzhiPage() {
   });
 }
 
-function renderComboDetailPage(store, meta) {
-  const statsMap = store.getComboMajorStats();
+function renderComboDetailPage(store, provinceMeta, meta) {
+  const { code, slug, name, fullName, shortGeo, mode } = provinceMeta;
+  const statsMap = store.getComboMajorStats(code);
+  const dsStats = store.getStats(code);
   const st = statsMap[meta.id];
   if (!st) return null;
 
   const displayName = COMBINATION_NAME_BY_ID.get(meta.id) || meta.shortName;
-  const title = `江苏高一选科「${meta.shortName}」（${displayName}）可报专业覆盖率与选科分析 - 高中选科助手`;
-  const description = `江苏高中选科选择「${displayName}（${meta.shortName}）」：本科专业覆盖率 ${st.undergradCoveragePct}%（可报 ${st.eligibleUndergrad.toLocaleString()} 条），专科覆盖率 ${st.vocationalCoveragePct}%。查看主要可报专业大类、受限方向与选科建议。`;
-  const keywords = `${meta.shortName},江苏${meta.shortName},江苏高中选科${meta.shortName},${displayName}能报什么专业,江苏高一选科`;
+  const title = `${name}高一选科「${meta.shortName}」（${displayName}）可报专业覆盖率与选科分析 - 高中选科助手`;
+  const description = `${name}高中选科选择「${displayName}（${meta.shortName}）」：本科专业覆盖率 ${st.undergradCoveragePct}%（可报 ${st.eligibleUndergrad.toLocaleString()} 条），专科覆盖率 ${st.vocationalCoveragePct}%。查看主要可报专业大类、受限方向与选科建议。`;
+  const keywords = `${meta.shortName},${name}${meta.shortName},${name}高中选科${meta.shortName},${displayName}能报什么专业,${name}高一选科`;
 
   const strongTracksHtml = (st.strongTracks || [])
     .slice(0, 8)
@@ -617,7 +650,7 @@ function renderComboDetailPage(store, meta) {
   const siblingLinks = COMBO_SEO_META.filter((m) => m.id !== meta.id)
     .map(
       (m) =>
-        `<a href="/jiangsu/${m.slug}" class="pill" style="text-decoration:none;">${escapeHtml(m.shortName)}（${statsMap[m.id]?.undergradCoveragePct ?? '--'}%）</a>`
+        `<a href="/${escapeHtml(slug)}/${m.slug}" class="pill" style="text-decoration:none;">${escapeHtml(m.shortName)}（${statsMap[m.id]?.undergradCoveragePct ?? '--'}%）</a>`
     )
     .join('');
 
@@ -626,11 +659,11 @@ function renderComboDetailPage(store, meta) {
       <div class="report-header-card">
         <div class="report-header-top">
           <div>
-            <p class="hint" style="margin-bottom:6px;"><a href="/" style="color:var(--muted);text-decoration:none;">首页</a> / <a href="/jiangsu" style="color:var(--muted);text-decoration:none;">江苏 3+1+2 选科</a> / ${escapeHtml(meta.shortName)}</p>
+            <p class="hint" style="margin-bottom:6px;"><a href="/" style="color:var(--muted);text-decoration:none;">首页</a> / <a href="/${escapeHtml(slug)}" style="color:var(--muted);text-decoration:none;">${escapeHtml(name)} ${escapeHtml(mode)} 选科</a> / ${escapeHtml(meta.shortName)}</p>
             <h2 class="report-title">${escapeHtml(displayName)}（${escapeHtml(meta.shortName)}）选科分析</h2>
-            <p class="hint">${escapeHtml(meta.tag)} · 基于江苏省官方在苏招生专业选科目录实时统计</p>
+            <p class="hint">${escapeHtml(meta.tag)} · 基于${escapeHtml(fullName)}官方${escapeHtml(shortGeo)}招生专业选科目录实时统计</p>
           </div>
-          <a href="/jiangsu" class="btn btn-primary" style="text-decoration:none;">用我的成绩测算此组合 →</a>
+          <a href="/${escapeHtml(slug)}" class="btn btn-primary" style="text-decoration:none;">用我的成绩测算此组合 →</a>
         </div>
         <div class="report-meta-tags">
           <span class="pill pill-success">本科可报 ${st.undergradCoveragePct}%（${st.eligibleUndergrad.toLocaleString()} / ${st.totalUndergrad.toLocaleString()}）</span>
@@ -645,7 +678,7 @@ function renderComboDetailPage(store, meta) {
       </section>
 
       <section class="doc-section">
-        <h3 class="doc-h3">二、对比江苏其他 11 种选科组合</h3>
+        <h3 class="doc-h3">二、对比${escapeHtml(name)}其他 11 种选科组合</h3>
         <div class="report-meta-tags" style="margin-top:0;">${siblingLinks}</div>
       </section>
     </article>
@@ -655,7 +688,9 @@ function renderComboDetailPage(store, meta) {
     title,
     description,
     keywords,
-    canonicalPath: `/jiangsu/${meta.slug}`,
+    canonicalPath: `/${slug}/${meta.slug}`,
+    provinceMeta,
+    offeringsCount: dsStats.offeringsCount,
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'Article',
@@ -733,7 +768,7 @@ function renderModesPage() {
           <div class="policy-card policy-card-main">
             <h3>实行「3+1+2」模式的省市</h3>
             <p class="policy-desc">
-              <strong>江苏省（本站已上线）</strong>、广东省、湖北省、湖南省、河北省、辽宁省、福建省、重庆市、黑龙江省、吉林省、安徽省、江西省、广西壮族自治区、贵州省、甘肃省、山西省、内蒙古自治区、河南省、四川省、云南省、陕西省、青海省、宁夏回族自治区等。
+              <strong>江苏省（本站已上线）</strong>、<strong>湖北省（本站已上线）</strong>、广东省、湖南省、河北省、辽宁省、福建省、重庆市、黑龙江省、吉林省、安徽省、江西省、广西壮族自治区、贵州省、甘肃省、山西省、内蒙古自治区、河南省、四川省、云南省、陕西省、青海省、宁夏回族自治区等。
             </p>
           </div>
           <div class="policy-card">
@@ -748,7 +783,7 @@ function renderModesPage() {
       <section class="doc-section">
         <h3 class="doc-h3">三、新高考选科与大学专业报考的关系</h3>
         <p class="policy-desc">
-          教育部与各省高校目前普遍执行新版选考科目要求：绝大多数<strong>理学、工学、农学、医学</strong>核心本科专业要求「物理 + 化学」均须选考；部分政法、公安及马克思主义理论类专业要求必选「思想政治」。想进一步了解等级赋分如何换算，可阅读 <a href="/fufenzhi" style="color:var(--primary-ink);font-weight:600;">《新高考等级赋分制详解》</a>，或直接前往 <a href="/jiangsu" style="color:var(--primary-ink);font-weight:600;">江苏选科分析</a> 体验实时测算。
+          教育部与各省高校目前普遍执行新版选考科目要求：绝大多数<strong>理学、工学、农学、医学</strong>核心本科专业要求「物理 + 化学」均须选考；部分政法、公安及马克思主义理论类专业要求必选「思想政治」。想进一步了解等级赋分如何换算，可阅读 <a href="/fufenzhi" style="color:var(--primary-ink);font-weight:600;">《新高考等级赋分制详解》</a>，或直接前往 <a href="/jiangsu" style="color:var(--primary-ink);font-weight:600;">江苏选科分析</a>、<a href="/hubei" style="color:var(--primary-ink);font-weight:600;">湖北选科分析</a> 体验实时测算。
         </p>
       </section>
     </article>
@@ -820,7 +855,13 @@ function renderPrivacyPage() {
 }
 
 function renderDisclaimerPage(store) {
-  const dsStats = store.getStats();
+  const allStats = Object.values(store.getAllProvinceStats ? store.getAllProvinceStats() : { JS: store.getStats() });
+  const provinceSummary = allStats
+    .map(
+      (s) =>
+        `${escapeHtml(s.provinceName || '江苏')}（<strong>${(s.offeringsCount || 0).toLocaleString()}</strong> 条，版本 <code>${escapeHtml(s.datasetVersion)}</code>）`
+    )
+    .join('、');
   const sources = store.getAllSources() || [];
   const sourceItems = sources
     .map((s) => `<li><strong>${escapeHtml(s.title)}</strong>（发布单位：${escapeHtml(s.publisher)}，发布时间：${escapeHtml(s.publishedAt)}）</li>`)
@@ -841,7 +882,7 @@ function renderDisclaimerPage(store) {
 
       <section class="doc-section" style="margin-top:20px;padding-top:20px;">
         <h3 class="doc-h3">一、官方数据来源</h3>
-        <p class="policy-desc" style="margin-bottom:10px;">当前系统已收录江苏省共 <strong>${dsStats.offeringsCount.toLocaleString()}</strong> 条高校专业选考科目要求（数据版本：<code>${escapeHtml(dsStats.datasetVersion)}</code>），主要参考以下公开资料：</p>
+        <p class="policy-desc" style="margin-bottom:10px;">当前系统已收录各省官方高校专业选考科目要求：${provinceSummary}，主要参考以下公开资料：</p>
         <ul class="policy-list">${sourceItems || '<li>各省教育考试院公开发布的普通高校本科/专科专业选考科目要求目录</li>'}</ul>
       </section>
 
@@ -921,9 +962,6 @@ export function renderSeoPage(urlPath, store) {
   if (cleanPath === '/modes') {
     return renderModesPage();
   }
-  if (cleanPath === '/jiangsu') {
-    return renderJiangsuHubPage(store);
-  }
   if (cleanPath === '/fufenzhi') {
     return renderFufenzhiPage();
   }
@@ -936,14 +974,19 @@ export function renderSeoPage(urlPath, store) {
   if (cleanPath === '/contact') {
     return renderContactPage();
   }
-  if (cleanPath === '/jiangsu/fufenzhi') {
-    return renderJiangsuFufenzhiPage();
-  }
-  if (cleanPath.startsWith('/jiangsu/')) {
-    const slug = cleanPath.slice('/jiangsu/'.length);
-    const meta = COMBO_BY_SLUG.get(slug);
-    if (meta) {
-      return renderComboDetailPage(store, meta);
+
+  // 多省份统一子路由：/<province-slug>/fufenzhi 与 /<province-slug>/<combo-slug>
+  const segs = cleanPath.slice(1).split('/');
+  if (segs.length === 2) {
+    const prov = getProvinceBySlug(segs[0]);
+    if (prov) {
+      if (segs[1] === 'fufenzhi') {
+        return renderProvinceFufenzhiPage(prov, store);
+      }
+      const meta = COMBO_BY_SLUG.get(segs[1]);
+      if (meta) {
+        return renderComboDetailPage(store, prov, meta);
+      }
     }
   }
   return null;
@@ -951,13 +994,16 @@ export function renderSeoPage(urlPath, store) {
 
 export function renderSitemapXml(siteOrigin = DEFAULT_SITE_ORIGIN) {
   const base = String(siteOrigin || DEFAULT_SITE_ORIGIN).replace(/\/+$/, '');
+  const provinceUrls = PROVINCE_REGISTRY.flatMap((prov) => [
+    { loc: `/${prov.slug}`, priority: '0.9', freq: 'weekly' },
+    { loc: `/${prov.slug}/fufenzhi`, priority: '0.85', freq: 'monthly' },
+    ...COMBO_SEO_META.map((m) => ({ loc: `/${prov.slug}/${m.slug}`, priority: '0.8', freq: 'monthly' })),
+  ]);
   const urls = [
     { loc: '/', priority: '1.0', freq: 'weekly' },
     { loc: '/modes', priority: '0.9', freq: 'monthly' },
-    { loc: '/jiangsu', priority: '0.9', freq: 'weekly' },
-    { loc: '/jiangsu/fufenzhi', priority: '0.85', freq: 'monthly' },
     { loc: '/fufenzhi', priority: '0.8', freq: 'monthly' },
-    ...COMBO_SEO_META.map((m) => ({ loc: `/jiangsu/${m.slug}`, priority: '0.8', freq: 'monthly' })),
+    ...provinceUrls,
     { loc: '/privacy', priority: '0.5', freq: 'yearly' },
     { loc: '/disclaimer', priority: '0.5', freq: 'yearly' },
     { loc: '/contact', priority: '0.5', freq: 'yearly' },

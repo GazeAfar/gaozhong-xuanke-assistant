@@ -2,75 +2,89 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCombinationMajorStats } from './advisor.mjs';
+import { PROVINCE_REGISTRY, DEFAULT_PROVINCE_CODE, resolveProvince } from './provinces.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
 
 /**
- * 加载官方标准化数据到内存并建立快速索引，支撑 7.9 万+ 条目毫秒级检索与匹配。
+ * 加载多省份官方标准化数据到内存并建立快速索引，支撑各省 8 万+ 条目毫秒级检索与匹配。
  */
 export function createMemoryStore(options = {}) {
   const dataDir = options.dataDir || path.join(rootDir, 'data', 'normalized');
   const runtimeDir = options.runtimeDir || path.join(rootDir, 'data', 'runtime');
 
   const sources = JSON.parse(fs.readFileSync(path.join(dataDir, 'sources.json'), 'utf8'));
-  const jsRule = JSON.parse(fs.readFileSync(path.join(dataDir, 'js-2027-rule.json'), 'utf8'));
-  const jsBundlePath = path.join(dataDir, 'js-2027.json');
 
+  const rulesByCode = new Map();
   const datasetsByVersion = new Map();
   const datasetsById = new Map();
+  const defaultDatasetByProvince = new Map();
   const offeringsByDataset = new Map();
   const offeringsById = new Map();
   const offeringsByMajor = new Map(); // datasetId -> Map<majorName, offering[]>
+  const comboMajorStatsByProvince = new Map();
 
-  let defaultDatasetVersion = null;
-  let defaultDataYear = null;
-  let comboMajorStats = {};
+  const supportedProvinces = [];
 
-  if (fs.existsSync(jsBundlePath)) {
-    const bundle = JSON.parse(fs.readFileSync(jsBundlePath, 'utf8'));
-    const { dataset, offerings } = bundle;
-    datasetsByVersion.set(`${dataset.provinceCode}::${dataset.version}`, dataset);
-    datasetsById.set(dataset.id, dataset);
+  for (const prov of PROVINCE_REGISTRY) {
+    const rulePath = path.join(dataDir, prov.ruleFile);
+    if (!fs.existsSync(rulePath)) continue;
+    const rule = JSON.parse(fs.readFileSync(rulePath, 'utf8'));
+    rulesByCode.set(prov.code, rule);
 
-    const indexed = offerings.map((item) => ({
-      ...item,
-      _searchMajor: (item.majorName || '').toLowerCase(),
-      _searchInst: (item.institutionName || '').toLowerCase(),
-    }));
-    offeringsByDataset.set(dataset.id, indexed);
-    comboMajorStats = buildCombinationMajorStats(indexed);
+    let defaultDatasetVersion = null;
+    let defaultDataYear = null;
 
-    const majorMap = new Map();
-    for (const item of indexed) {
-      offeringsById.set(`${dataset.version}::${item.id}`, item);
-      const key = item.majorId || item.majorName;
-      let bucket = majorMap.get(key);
-      if (!bucket) {
-        bucket = [];
-        majorMap.set(key, bucket);
+    const bundlePath = path.join(dataDir, prov.bundleFile);
+    if (fs.existsSync(bundlePath)) {
+      const bundle = JSON.parse(fs.readFileSync(bundlePath, 'utf8'));
+      const { dataset, offerings } = bundle;
+      datasetsByVersion.set(`${dataset.provinceCode}::${dataset.version}`, dataset);
+      datasetsById.set(dataset.id, dataset);
+      defaultDatasetByProvince.set(prov.code, dataset);
+
+      const indexed = offerings.map((item) => ({
+        ...item,
+        _searchMajor: (item.majorName || '').toLowerCase(),
+        _searchInst: (item.institutionName || '').toLowerCase(),
+      }));
+      offeringsByDataset.set(dataset.id, indexed);
+      comboMajorStatsByProvince.set(prov.code, buildCombinationMajorStats(indexed));
+
+      const majorMap = new Map();
+      for (const item of indexed) {
+        offeringsById.set(`${dataset.version}::${item.id}`, item);
+        const key = item.majorId || item.majorName;
+        let bucket = majorMap.get(key);
+        if (!bucket) {
+          bucket = [];
+          majorMap.set(key, bucket);
+        }
+        bucket.push(item);
       }
-      bucket.push(item);
-    }
-    offeringsByMajor.set(dataset.id, majorMap);
+      offeringsByMajor.set(dataset.id, majorMap);
 
-    defaultDatasetVersion = dataset.version;
-    defaultDataYear = dataset.dataYear;
+      defaultDatasetVersion = dataset.version;
+      defaultDataYear = dataset.dataYear;
+    }
+
+    supportedProvinces.push({
+      provinceCode: rule.provinceCode,
+      provinceName: rule.provinceName,
+      slug: prov.slug,
+      mode: rule.mode,
+      ruleVersion: rule.version,
+      availableYears: rule.applicableYears,
+      defaultDatasetVersion,
+      defaultDataYear,
+    });
   }
 
   const manifest = {
     schemaVersion: 1,
     updatedAt: new Date().toISOString(),
-    supportedProvinces: [
-      {
-        provinceCode: jsRule.provinceCode,
-        provinceName: jsRule.provinceName,
-        ruleVersion: jsRule.version,
-        availableYears: jsRule.applicableYears,
-        defaultDatasetVersion,
-        defaultDataYear,
-      },
-    ],
+    supportedProvinces,
     featureFlags: {
       adEnabled: false,
       rewardedAdEnabled: false,
@@ -86,27 +100,61 @@ export function createMemoryStore(options = {}) {
     return clean;
   }
 
+  function resolveCode(provinceCode) {
+    const prov = resolveProvince(provinceCode || DEFAULT_PROVINCE_CODE);
+    return prov ? prov.code : DEFAULT_PROVINCE_CODE;
+  }
+
   return {
-    getStats() {
-      const ds = datasetsById.values().next().value;
+    getStats(provinceCode = DEFAULT_PROVINCE_CODE) {
+      const code = resolveCode(provinceCode);
+      const ds = defaultDatasetByProvince.get(code) || datasetsById.values().next().value;
       return {
-        datasetVersion: defaultDatasetVersion,
-        dataYear: defaultDataYear,
+        provinceCode: code,
+        datasetVersion: ds ? ds.version : null,
+        dataYear: ds ? ds.dataYear : null,
         offeringsCount: ds ? (offeringsByDataset.get(ds.id)?.length || 0) : 0,
       };
     },
 
-    getComboMajorStats() {
-      return comboMajorStats;
+    getAllProvinceStats() {
+      const result = {};
+      for (const prov of PROVINCE_REGISTRY) {
+        const ds = defaultDatasetByProvince.get(prov.code);
+        result[prov.code] = {
+          provinceCode: prov.code,
+          provinceName: prov.name,
+          slug: prov.slug,
+          datasetVersion: ds ? ds.version : null,
+          dataYear: ds ? ds.dataYear : null,
+          offeringsCount: ds ? (offeringsByDataset.get(ds.id)?.length || 0) : 0,
+        };
+      }
+      return result;
+    },
+
+    getComboMajorStats(provinceCode = DEFAULT_PROVINCE_CODE) {
+      const code = resolveCode(provinceCode);
+      return comboMajorStatsByProvince.get(code) || {};
     },
 
     getAllSources() {
       return sources;
     },
 
-    async searchOfferingsFiltered({ q, level, offset, limit }) {
-      const ds = datasetsById.values().next().value;
-      if (!ds) return { items: [], total: 0, dataYear: null, datasetVersion: null };
+    getSourcesForProvince(provinceCode = DEFAULT_PROVINCE_CODE) {
+      const code = resolveCode(provinceCode);
+      const ds = defaultDatasetByProvince.get(code);
+      const ids = new Set(ds?.sourceIds || []);
+      ids.add('S02');
+      if (code === 'JS') ids.add('S01_PORTAL');
+      return sources.filter((s) => ids.has(s.id));
+    },
+
+    async searchOfferingsFiltered({ provinceCode = DEFAULT_PROVINCE_CODE, q, level, offset, limit }) {
+      const code = resolveCode(provinceCode);
+      const ds = defaultDatasetByProvince.get(code) || datasetsById.values().next().value;
+      if (!ds) return { items: [], total: 0, dataYear: null, datasetVersion: null, provinceCode: code };
       const list = offeringsByDataset.get(ds.id) || [];
       const lowered = (q || '').trim().toLowerCase();
       const matched = list.filter((item) => {
@@ -119,6 +167,7 @@ export function createMemoryStore(options = {}) {
         total: matched.length,
         dataYear: ds.dataYear,
         datasetVersion: ds.version,
+        provinceCode: code,
       };
     },
 
@@ -127,9 +176,10 @@ export function createMemoryStore(options = {}) {
     },
 
     async getProvinceRule(provinceCode, ruleVersion) {
-      if (provinceCode !== jsRule.provinceCode) return null;
-      if (ruleVersion && ruleVersion !== jsRule.version) return null;
-      return jsRule;
+      const rule = rulesByCode.get(String(provinceCode || '').toUpperCase());
+      if (!rule) return null;
+      if (ruleVersion && ruleVersion !== rule.version) return null;
+      return rule;
     },
 
     async getSourceById(id) {
