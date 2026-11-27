@@ -2162,6 +2162,16 @@ summary:focus:not(:focus-visible) {
   }
 }
 
+@media (max-width: 420px) {
+  .province-live-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .province-live-tile {
+    padding: 14px 16px;
+  }
+}
+
 /* ===========================
    Policy Guide, FAQ & Full Website Footer
    =========================== */
