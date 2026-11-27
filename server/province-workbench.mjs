@@ -601,7 +601,7 @@ export function renderProvinceWorkbenchPage(provinceMeta, store, siteOrigin = DE
     </div>
   </dialog>
 
-  <script src="/app.js?v=54"></script>
+  <script src="/app.js?v=55"></script>
   <script>
     (function () {
       var btn = document.getElementById('btn-portal-nav-toggle');
