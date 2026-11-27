@@ -1988,13 +1988,15 @@ summary:focus:not(:focus-visible) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 4px 8px;
 }
 
 .province-live-tile-top strong {
   font-size: 17px;
   font-weight: 700;
   color: var(--text);
+  white-space: nowrap;
 }
 
 .province-mode-tag {
@@ -2006,11 +2008,13 @@ summary:focus:not(:focus-visible) {
   border-radius: 999px;
   padding: 1px 8px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .province-live-count {
   font-size: 13px;
   color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .province-live-cta {
@@ -2018,6 +2022,7 @@ summary:focus:not(:focus-visible) {
   font-size: 13px;
   font-weight: 600;
   color: var(--primary-ink);
+  white-space: nowrap;
 }
 
 .province-live-card {
