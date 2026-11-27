@@ -1050,9 +1050,9 @@ function renderReport(data) {
               </div>
               <div class="rec-summary-right">
                 <div class="rec-score-box">
-                  <span class="metric-chip metric-blue">实力 <strong>${rec.academicScore}</strong></span>
-                  <span class="metric-chip metric-green">本科 <strong>${stats.undergradCoveragePct}%</strong></span>
-                  <span class="metric-chip metric-purple">综合 <strong>${rec.compositeScore}</strong></span>
+                  <span class="metric-chip metric-blue">学科实力 <strong>${rec.academicScore}</strong></span>
+                  <span class="metric-chip metric-green">本科可报 <strong>${stats.undergradCoveragePct}%</strong></span>
+                  <span class="metric-chip metric-purple">综合推荐 <strong>${rec.compositeScore}</strong></span>
                 </div>
                 <span class="rec-toggle-btn no-print" aria-hidden="true">
                   <span class="toggle-text-expand">展开详情 ▾</span>
@@ -1157,11 +1157,38 @@ function renderReport(data) {
     return '';
   };
 
+  const buildWeightExplainHtml = () => {
+    if (report.examCount < 2) return '';
+    const sampleWeights = [];
+    for (let i = 0; i < Math.min(report.examCount, 4); i += 1) {
+      sampleWeights.push(`第 ${i + 1} 次 <strong>${(1 + i * 0.15).toFixed(2)}</strong>`);
+    }
+    const weightSeq = sampleWeights.join('、') + (report.examCount > 4 ? '……' : '');
+    return `
+      <details class="metric-explain-box print-expand-details" style="margin:0 0 14px;">
+        <summary>计算说明：什么是「加权总分 / 加权均分」？具体怎么算的？</summary>
+        <ul class="metric-explain-list">
+          <li><strong>什么是加权？</strong>孩子刚开学时的成绩和最近一次考试相比，<strong>越近的考试越能代表孩子当前真实水平</strong>。所以系统不是把几次分数简单相加求平均，而是给越靠后的考试分配越高的比重（权重），这就是「时间加权」。</li>
+          <li><strong>具体怎么算？</strong>按录入顺序，第 1 次考试权重为 <strong>1.00</strong>，每往后一次增加 <strong>0.15</strong>（您本次录入 ${report.examCount} 次，权重依次为：${weightSeq}）。计算公式为：<code>加权分 = (第1次×1.00 + 第2次×1.15 + …) ÷ 权重总和</code>，结果四舍五入保留 1 位小数。</li>
+          <li><strong>举个例子</strong>：假如某科第 1 次考 80 分、第 2 次考 90 分，普通平均分是 85.0 分；按时间加权则是 <code>(80×1.00 + 90×1.15) ÷ (1.00 + 1.15) = 85.3 分</code>，更贴近最近进步后的状态。<strong>考试总分、语数外、六门选考以及排名均位</strong>均按此统一规则计算。</li>
+        </ul>
+      </details>
+    `;
+  };
+  const weightExplainHtml = buildWeightExplainHtml();
+  let weightExplainPlaced = false;
+  const takeWeightExplain = () => {
+    if (weightExplainPlaced || !weightExplainHtml) return '';
+    weightExplainPlaced = true;
+    return weightExplainHtml;
+  };
+
   const examTotalSectionHtml = examTotal?.hasData
     ? `
     <section class="doc-section">
       <h3 class="doc-h3" style="margin-bottom:4px;">考试总分与排名概况</h3>
-      <p class="hint" style="margin-bottom:14px;">总分按历次考试时间加权计算（越近权重越高）；总排名为选填项，仅按已录入场次统计。</p>
+      <p class="hint" style="margin-bottom:12px;">总分按历次考试时间加权计算（越近权重越高）；总排名为选填项，仅按已录入场次统计。</p>
+      ${takeWeightExplain()}
       <div class="total-overview-grid">
         <div class="profile-item profile-item-strong">
           <div class="profile-head">
@@ -1204,6 +1231,7 @@ function renderReport(data) {
     <section class="card">
       <h3 style="margin:0 0 4px;font-size:17px;">语数外成绩${report.coreTotalAvg !== null ? ` <span class="pill pill-teal" style="margin-left:8px;">${report.examCount >= 2 ? '加权总分' : '总分'} ${report.coreTotalAvg} / 450</span>` : ''}</h3>
       <p class="hint" style="margin-bottom:12px;">${report.examCount >= 2 ? '下方主科分数为多次考试加权均分（越近权重越高），并附历次得分轨迹；排名仅按已录入场次展示。' : '下方为本次录入的语数外主科成绩与排名。'}</p>
+      ${takeWeightExplain()}
       <div class="core-profile-grid">
         ${report.coreProfiles
           .map((p) => {
@@ -1241,25 +1269,6 @@ function renderReport(data) {
   const provFullName = PROVINCE_CONFIG.fullName;
   const provShortGeo = PROVINCE_CONFIG.shortGeo;
   const provAuthority = PROVINCE_CONFIG.authorityName;
-
-  const buildWeightExplainHtml = () => {
-    if (report.examCount < 2) return '';
-    const sampleWeights = [];
-    for (let i = 0; i < Math.min(report.examCount, 4); i += 1) {
-      sampleWeights.push(`第 ${i + 1} 次 <strong>${(1 + i * 0.15).toFixed(2)}</strong>`);
-    }
-    const weightSeq = sampleWeights.join('、') + (report.examCount > 4 ? '……' : '');
-    return `
-      <details class="metric-explain-box print-expand-details" style="margin-top:16px;margin-bottom:0;">
-        <summary>计算说明：什么是「加权总分 / 加权均分」？具体怎么算的？</summary>
-        <ul class="metric-explain-list">
-          <li><strong>什么是加权？</strong>孩子刚开学时的成绩和最近一次考试相比，<strong>越近的考试越能代表孩子当前真实水平</strong>。所以系统不是把几次分数简单相加求平均，而是给越靠后的考试分配越高的比重（权重），这就是「时间加权」。</li>
-          <li><strong>具体怎么算？</strong>按录入顺序，第 1 次考试权重为 <strong>1.00</strong>，每往后一次增加 <strong>0.15</strong>（您本次录入 ${report.examCount} 次，权重依次为：${weightSeq}）。计算公式为：<code>加权分 = (第1次×1.00 + 第2次×1.15 + …) ÷ 权重总和</code>，结果四舍五入保留 1 位小数。</li>
-          <li><strong>举个例子</strong>：假如某科第 1 次考 80 分、第 2 次考 90 分，普通平均分是 85.0 分；按时间加权则是 <code>(80×1.00 + 90×1.15) ÷ (1.00 + 1.15) = 85.3 分</code>，更贴近最近进步后的状态。<strong>考试总分、语数外、六门选考以及排名均位</strong>均按此统一规则计算。</li>
-        </ul>
-      </details>
-    `;
-  };
 
   const buildMetricExplainHtml = (extraClass = '') => `
     <details class="metric-explain-box ${extraClass}">
@@ -1314,8 +1323,6 @@ function renderReport(data) {
         <p class="hint" style="margin-top:10px;">${escapeHtml(careerOutlook.disclaimer)}</p>
       </section>
 
-      ${buildWeightExplainHtml()}
-
       ${examTotalSectionHtml}
 
       ${coreSectionHtml}
@@ -1323,6 +1330,7 @@ function renderReport(data) {
       <section class="doc-section">
         <h3 class="doc-h3" style="margin-bottom:4px;">六门选考成绩画像</h3>
         <p class="hint" style="margin-bottom:14px;">${report.examCount >= 2 ? '大字为历次考试时间加权均分（越近权重越高），下方附每次原始分轨迹；排名为选填项，仅按已录入场次统计。' : '下方为本次录入的六门选考科目成绩与排名。'}</p>
+        ${takeWeightExplain()}
         <div class="profile-grid">${profilesHtml}</div>
       </section>
 
