@@ -156,3 +156,47 @@ test('正式湖北 2027 全量库（hb-2027.json）：全部 24 种表达式 × 
     }
   }
 });
+
+for (const cfg of [
+  { code: 'HA', name: '河南', file: 'ha-2027.json', ruleFile: 'ha-2027-rule.json', expectedCount: 96437, expectedExprs: 21 },
+  { code: 'HE', name: '河北', file: 'he-2027.json', ruleFile: 'he-2027-rule.json', expectedCount: 91789, expectedExprs: 21 },
+  { code: 'HN', name: '湖南', file: 'hn-2027.json', ruleFile: 'hn-2027-rule.json', expectedCount: 85163, expectedExprs: 20 },
+]) {
+  test(`正式${cfg.name} 2027 全量库（${cfg.file}）：全部 ${cfg.expectedExprs} 种表达式 × 12 组合真值与生产校验通过`, () => {
+    const realPath = path.join(rootDir, 'data', 'normalized', cfg.file);
+    assert.ok(fs.existsSync(realPath), `缺少 data/normalized/${cfg.file}`);
+    const bundle = JSON.parse(fs.readFileSync(realPath, 'utf8'));
+    const report = validateDatasetBundle(bundle, sources, { targetEnv: 'prod' });
+    assert.equal(report.valid, true);
+    assert.equal(report.stats.unknownCount, 0);
+    assert.equal(bundle.offerings.length, cfg.expectedCount);
+
+    const rule = JSON.parse(
+      fs.readFileSync(path.join(rootDir, 'data', 'normalized', cfg.ruleFile), 'utf8')
+    );
+    const combos = generateCombinations(rule);
+
+    const seenExpr = new Map();
+    for (const off of bundle.offerings) {
+      if (!seenExpr.has(off.requirementRaw)) {
+        seenExpr.set(off.requirementRaw, off);
+      }
+    }
+    assert.equal(seenExpr.size, cfg.expectedExprs);
+
+    for (const [, sample] of seenExpr.entries()) {
+      for (const combo of combos) {
+        const st = matchOffering(combo.subjects, sample);
+        assert.ok(st === 'eligible' || st === 'ineligible', `正式库不应出现 unknown: ${sample.requirementRaw}`);
+        if (sample.requirementTree.type === 'NONE') {
+          assert.equal(st, 'eligible');
+        } else if (sample.requirementTree.type === 'ALL') {
+          const expected = sample.requirementTree.subjects.every((s) => combo.subjects.includes(s))
+            ? 'eligible'
+            : 'ineligible';
+          assert.equal(st, expected, `${sample.requirementRaw} vs ${combo.id}`);
+        }
+      }
+    }
+  });
+}

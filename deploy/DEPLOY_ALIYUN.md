@@ -1,13 +1,13 @@
 # 阿里云 ECS 部署指南
 
-本服务为零第三方运行时依赖的 Node.js 20 Web + SSR 服务，启动时直接将 `data/normalized/` 下各省官方专业选科要求（江苏 79,753 条 + 湖北 81,803 条，随 `server/provinces.mjs` 扩展）加载至内存索引，内存占用约 120–180 MB，单次检索耗时 < 5ms，无需额外部署数据库。
+本服务为零第三方运行时依赖的 Node.js 20 Web + SSR 服务，启动时仅加载各省轻量 `*-stats.json`（约 15 KB/省，支持毫秒级冷启动），院校明细按省份懒加载并由有界 LRU 缓存管理（默认最多常驻 2 省），即使接入 5 省（43.4 万+ 条）内存占用仍稳定在 150–220 MB，无需额外部署数据库。
 
 ## 1. 上传必要文件到阿里云 ECS
 
 只需上传以下三个目录（无需上传 `node_modules` 或 `data/raw`）：
 - `server/`
 - `web/`
-- `data/normalized/`（包含 `js-2027.json`、`js-2027-rule.json`、`hb-2027.json`、`hb-2027-rule.json`、`sources.json` 等）
+- `data/normalized/`（包含各省 `*-2027.json`、`*-2027-rule.json`、`*-2027-stats.json` 与 `sources.json`）
 
 ```bash
 ssh root@<你的ECS公网IP> "mkdir -p /opt/gaozhong-xuanke-assistant/data"

@@ -1,6 +1,6 @@
 # 高中选科助手（https://xuanke.visc.cn）
 
-> 面向全国高一学生与家长的免费新高考选科决策与就业分析工具（支持 3+1+2 并陆续覆盖 3+3 省份）。目前已上线「江苏省」（79,753 条官方专业要求）与「湖北省」（81,803 条官方专业要求），更多省份陆续上线中。
+> 面向全国高一学生与家长的免费新高考选科决策与就业分析工具（支持 3+1+2 并陆续覆盖 3+3 省份）。目前已上线 5 个高考大省：**江苏省（79,753 条）**、**湖北省（81,803 条）**、**河南省（96,437 条）**、**河北省（91,789 条）**、**湖南省（85,163 条）**，合计 434,945 条官方专业选科要求，更多省份陆续上线中。
 
 ## 核心功能
 
@@ -12,8 +12,11 @@
 ## 适用关键词与地区
 
 - 全国通用：高中选科、高一选科、高中选科助手、新高考选科、3+1+2 与 3+3 区别、等级赋分制
-- 江苏专区（已上线）：江苏高中选科、江苏高一选科、南京高中选科、南京高一选科、江苏省 3+1+2 选科与五等级赋分
-- 湖北专区（已上线）：湖北高中选科、湖北高一选科、武汉高中选科、武汉高一选科、湖北省 3+1+2 选科与五等级赋分
+- 江苏专区（已上线）：江苏高中选科、江苏高一选科、南京高中选科、江苏省 3+1+2 选科与五等级赋分
+- 湖北专区（已上线）：湖北高中选科、湖北高一选科、武汉高中选科、湖北省 3+1+2 选科与五等级赋分
+- 河南专区（已上线）：河南高中选科、河南高一选科、郑州高中选科、河南省 3+1+2 选科与五等级赋分
+- 河北专区（已上线）：河北高中选科、河北高一选科、石家庄高中选科、河北省 3+1+2 选科与五等级赋分
+- 湖南专区（已上线）：湖南高中选科、湖南高一选科、长沙高中选科、湖南省 3+1+2 选科与五等级赋分
 
 ## 独立专题与索引页面
 
@@ -58,6 +61,21 @@
   - `https://xuanke.visc.cn/hubei/shihuadi`（历史 · 化学 · 地理 / 史化地）
   - `https://xuanke.visc.cn/hubei/shihuazheng`（历史 · 化学 · 思想政治 / 史化政）
   - `https://xuanke.visc.cn/hubei/shihuasheng`（历史 · 化学 · 生物学 / 史化生）
+
+### 河南省专属页面
+- `https://xuanke.visc.cn/henan`：河南省 3+1+2 选科分析（96,437 条在豫招生高校专业库）
+- `https://xuanke.visc.cn/henan/fufenzhi`：河南省高考等级赋分制详解
+- 河南 12 种选科组合独立分析页：`https://xuanke.visc.cn/henan/{wuhuasheng,wuhuadi,wuhuazheng,wushengdi,wushengzheng,wuzhengdi,shizhengdi,shishengdi,shishengzheng,shihuadi,shihuazheng,shihuasheng}`
+
+### 河北省专属页面
+- `https://xuanke.visc.cn/hebei`：河北省 3+1+2 选科分析（91,789 条在冀招生高校专业库）
+- `https://xuanke.visc.cn/hebei/fufenzhi`：河北省高考等级赋分制详解
+- 河北 12 种选科组合独立分析页：`https://xuanke.visc.cn/hebei/{wuhuasheng,wuhuadi,wuhuazheng,wushengdi,wushengzheng,wuzhengdi,shizhengdi,shishengdi,shishengzheng,shihuadi,shihuazheng,shihuasheng}`
+
+### 湖南省专属页面
+- `https://xuanke.visc.cn/hunan`：湖南省 3+1+2 选科分析（85,163 条在湘招生高校专业库）
+- `https://xuanke.visc.cn/hunan/fufenzhi`：湖南省高考等级赋分制详解
+- 湖南 12 种选科组合独立分析页：`https://xuanke.visc.cn/hunan/{wuhuasheng,wuhuadi,wuhuazheng,wushengdi,wushengzheng,wuzhengdi,shizhengdi,shishengdi,shishengzheng,shihuadi,shihuazheng,shihuasheng}`
 
 ## 常见问题（FAQ）
 

@@ -8,11 +8,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
 
 /**
- * 加载多省份官方标准化数据到内存并建立快速索引，支撑各省 8 万+ 条目毫秒级检索与匹配。
+ * 多省份官方数据存储（启动轻量预加载 + 明细 LRU 按需懒加载）：
+ * - 启动时仅加载各省规则与轻量 *-stats.json（约 15KB/省），毫秒级冷启动，不占大内存；
+ * - 院校专业检索时按省懒加载全量 JSON，并通过有界 LRU 缓存（默认最多常驻 2 省）严控内存上限。
  */
 export function createMemoryStore(options = {}) {
   const dataDir = options.dataDir || path.join(rootDir, 'data', 'normalized');
   const runtimeDir = options.runtimeDir || path.join(rootDir, 'data', 'runtime');
+  const maxCachedDatasets = Math.max(1, Number(options.maxCachedDatasets) || 2);
 
   const sources = JSON.parse(fs.readFileSync(path.join(dataDir, 'sources.json'), 'utf8'));
 
@@ -20,10 +23,12 @@ export function createMemoryStore(options = {}) {
   const datasetsByVersion = new Map();
   const datasetsById = new Map();
   const defaultDatasetByProvince = new Map();
-  const offeringsByDataset = new Map();
-  const offeringsById = new Map();
-  const offeringsByMajor = new Map(); // datasetId -> Map<majorName, offering[]>
+  const offeringsCountByDataset = new Map();
+  const bundlePathByDataset = new Map();
   const comboMajorStatsByProvince = new Map();
+
+  // LRU 缓存：datasetId -> { indexed, byId, byMajor }，Map 迭代顺序按最近使用维护
+  const datasetCache = new Map();
 
   const supportedProvinces = [];
 
@@ -37,33 +42,29 @@ export function createMemoryStore(options = {}) {
     let defaultDataYear = null;
 
     const bundlePath = path.join(dataDir, prov.bundleFile);
-    if (fs.existsSync(bundlePath)) {
+    const statsPath = prov.statsFile ? path.join(dataDir, prov.statsFile) : null;
+
+    if (statsPath && fs.existsSync(statsPath) && fs.existsSync(bundlePath)) {
+      const statsObj = JSON.parse(fs.readFileSync(statsPath, 'utf8'));
+      const { dataset, offeringsCount, comboMajorStats } = statsObj;
+      datasetsByVersion.set(`${dataset.provinceCode}::${dataset.version}`, dataset);
+      datasetsById.set(dataset.id, dataset);
+      defaultDatasetByProvince.set(prov.code, dataset);
+      offeringsCountByDataset.set(dataset.id, offeringsCount);
+      bundlePathByDataset.set(dataset.id, bundlePath);
+      comboMajorStatsByProvince.set(prov.code, comboMajorStats);
+
+      defaultDatasetVersion = dataset.version;
+      defaultDataYear = dataset.dataYear;
+    } else if (fs.existsSync(bundlePath)) {
       const bundle = JSON.parse(fs.readFileSync(bundlePath, 'utf8'));
       const { dataset, offerings } = bundle;
       datasetsByVersion.set(`${dataset.provinceCode}::${dataset.version}`, dataset);
       datasetsById.set(dataset.id, dataset);
       defaultDatasetByProvince.set(prov.code, dataset);
-
-      const indexed = offerings.map((item) => ({
-        ...item,
-        _searchMajor: (item.majorName || '').toLowerCase(),
-        _searchInst: (item.institutionName || '').toLowerCase(),
-      }));
-      offeringsByDataset.set(dataset.id, indexed);
-      comboMajorStatsByProvince.set(prov.code, buildCombinationMajorStats(indexed));
-
-      const majorMap = new Map();
-      for (const item of indexed) {
-        offeringsById.set(`${dataset.version}::${item.id}`, item);
-        const key = item.majorId || item.majorName;
-        let bucket = majorMap.get(key);
-        if (!bucket) {
-          bucket = [];
-          majorMap.set(key, bucket);
-        }
-        bucket.push(item);
-      }
-      offeringsByMajor.set(dataset.id, majorMap);
+      offeringsCountByDataset.set(dataset.id, offerings.length);
+      bundlePathByDataset.set(dataset.id, bundlePath);
+      comboMajorStatsByProvince.set(prov.code, buildCombinationMajorStats(offerings));
 
       defaultDatasetVersion = dataset.version;
       defaultDataYear = dataset.dataYear;
@@ -105,6 +106,48 @@ export function createMemoryStore(options = {}) {
     return prov ? prov.code : DEFAULT_PROVINCE_CODE;
   }
 
+  function getOrLoadDatasetCache(datasetId) {
+    if (!datasetId) return null;
+    if (datasetCache.has(datasetId)) {
+      const entry = datasetCache.get(datasetId);
+      // 刷新 LRU 顺序
+      datasetCache.delete(datasetId);
+      datasetCache.set(datasetId, entry);
+      return entry;
+    }
+
+    const bundlePath = bundlePathByDataset.get(datasetId);
+    if (!bundlePath || !fs.existsSync(bundlePath)) return null;
+
+    const bundle = JSON.parse(fs.readFileSync(bundlePath, 'utf8'));
+    const { offerings } = bundle;
+    const indexed = offerings.map((item) => ({
+      ...item,
+      _searchMajor: (item.majorName || '').toLowerCase(),
+      _searchInst: (item.institutionName || '').toLowerCase(),
+    }));
+    const byId = new Map();
+    const byMajor = new Map();
+    for (const item of indexed) {
+      byId.set(item.id, item);
+      const key = item.majorId || item.majorName;
+      let bucket = byMajor.get(key);
+      if (!bucket) {
+        bucket = [];
+        byMajor.set(key, bucket);
+      }
+      bucket.push(item);
+    }
+
+    const entry = { indexed, byId, byMajor };
+    if (datasetCache.size >= maxCachedDatasets) {
+      const oldestKey = datasetCache.keys().next().value;
+      datasetCache.delete(oldestKey);
+    }
+    datasetCache.set(datasetId, entry);
+    return entry;
+  }
+
   return {
     getStats(provinceCode = DEFAULT_PROVINCE_CODE) {
       const code = resolveCode(provinceCode);
@@ -113,7 +156,7 @@ export function createMemoryStore(options = {}) {
         provinceCode: code,
         datasetVersion: ds ? ds.version : null,
         dataYear: ds ? ds.dataYear : null,
-        offeringsCount: ds ? (offeringsByDataset.get(ds.id)?.length || 0) : 0,
+        offeringsCount: ds ? (offeringsCountByDataset.get(ds.id) || 0) : 0,
       };
     },
 
@@ -127,10 +170,17 @@ export function createMemoryStore(options = {}) {
           slug: prov.slug,
           datasetVersion: ds ? ds.version : null,
           dataYear: ds ? ds.dataYear : null,
-          offeringsCount: ds ? (offeringsByDataset.get(ds.id)?.length || 0) : 0,
+          offeringsCount: ds ? (offeringsCountByDataset.get(ds.id) || 0) : 0,
         };
       }
       return result;
+    },
+
+    getCacheInfo() {
+      return {
+        cachedDatasets: Array.from(datasetCache.keys()),
+        maxCachedDatasets,
+      };
     },
 
     getComboMajorStats(provinceCode = DEFAULT_PROVINCE_CODE) {
@@ -155,7 +205,8 @@ export function createMemoryStore(options = {}) {
       const code = resolveCode(provinceCode);
       const ds = defaultDatasetByProvince.get(code) || datasetsById.values().next().value;
       if (!ds) return { items: [], total: 0, dataYear: null, datasetVersion: null, provinceCode: code };
-      const list = offeringsByDataset.get(ds.id) || [];
+      const cache = getOrLoadDatasetCache(ds.id);
+      const list = cache ? cache.indexed : [];
       const lowered = (q || '').trim().toLowerCase();
       const matched = list.filter((item) => {
         if (level && level !== 'ALL' && item.level !== level) return false;
@@ -199,7 +250,8 @@ export function createMemoryStore(options = {}) {
     },
 
     async searchOfferingsPage({ datasetId, q, offset, limit }) {
-      const list = offeringsByDataset.get(datasetId) || [];
+      const cache = getOrLoadDatasetCache(datasetId);
+      const list = cache ? cache.indexed : [];
       const lowered = (q || '').toLowerCase();
       let matched = list;
       if (lowered) {
@@ -212,11 +264,11 @@ export function createMemoryStore(options = {}) {
     },
 
     async getOfferingsByMajorIds(datasetId, majorIds) {
-      const majorMap = offeringsByMajor.get(datasetId);
-      if (!majorMap) return [];
+      const cache = getOrLoadDatasetCache(datasetId);
+      if (!cache) return [];
       const results = [];
       for (const mid of majorIds) {
-        const bucket = majorMap.get(mid);
+        const bucket = cache.byMajor.get(mid);
         if (bucket) {
           for (const item of bucket) {
             results.push(stripInternalFields(item));
@@ -227,7 +279,16 @@ export function createMemoryStore(options = {}) {
     },
 
     async getOfferingById(id, datasetVersion) {
-      const found = offeringsById.get(`${datasetVersion}::${id}`);
+      let targetDs = null;
+      for (const ds of datasetsById.values()) {
+        if (ds.version === datasetVersion) {
+          targetDs = ds;
+          break;
+        }
+      }
+      if (!targetDs) return null;
+      const cache = getOrLoadDatasetCache(targetDs.id);
+      const found = cache?.byId.get(id);
       return found ? stripInternalFields(found) : null;
     },
 

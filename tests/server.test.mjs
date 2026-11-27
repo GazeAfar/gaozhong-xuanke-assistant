@@ -228,3 +228,35 @@ test('多省份 SSR、SEO、Sitemap 与报告引擎验收：江苏 & 湖北', as
   assert.ok(hbCareer.macroSummary.includes('湖北高考'));
   assert.equal(hbCareer.byCombination.length, 3);
 });
+
+test('5 省扩展与 LRU 懒加载缓存：河南/河北/湖南独立检索、SSR、Sitemap 且内存缓存严格有界', async () => {
+  assert.equal(store.getStats('HA').offeringsCount, 96437);
+  assert.equal(store.getStats('HE').offeringsCount, 91789);
+  assert.equal(store.getStats('HN').offeringsCount, 85163);
+
+  const [haRes, heRes, hnRes] = await Promise.all([
+    store.searchOfferingsFiltered({ provinceCode: 'HA', q: '郑州大学', level: '本科', offset: 0, limit: 5 }),
+    store.searchOfferingsFiltered({ provinceCode: 'HE', q: '燕山大学', level: '本科', offset: 0, limit: 5 }),
+    store.searchOfferingsFiltered({ provinceCode: 'HN', q: '中南大学', level: '本科', offset: 0, limit: 5 }),
+  ]);
+  assert.ok(haRes.total > 0 && haRes.datasetVersion === 'HA-2027.1');
+  assert.ok(heRes.total > 0 && heRes.datasetVersion === 'HE-2027.1');
+  assert.ok(hnRes.total > 0 && hnRes.datasetVersion === 'HN-2027.1');
+
+  // 验证 LRU 缓存上限严格生效（默认 maxCachedDatasets = 2）
+  const cacheInfo = store.getCacheInfo();
+  assert.ok(cacheInfo.cachedDatasets.length <= cacheInfo.maxCachedDatasets);
+
+  const haPage = renderProvinceWorkbenchPage(getProvinceByCode('HA'), store);
+  const hePage = renderProvinceWorkbenchPage(getProvinceByCode('HE'), store);
+  const hnPage = renderProvinceWorkbenchPage(getProvinceByCode('HN'), store);
+  assert.ok(haPage.includes('高中选科助手 · 河南') && haPage.includes('96,437'));
+  assert.ok(hePage.includes('高中选科助手 · 河北') && hePage.includes('91,789'));
+  assert.ok(hnPage.includes('高中选科助手 · 湖南') && hnPage.includes('85,163'));
+
+  const sitemap = renderSitemapXml('https://xuanke.visc.cn');
+  assert.ok(sitemap.includes('https://xuanke.visc.cn/henan</loc>'));
+  assert.ok(sitemap.includes('https://xuanke.visc.cn/hebei</loc>'));
+  assert.ok(sitemap.includes('https://xuanke.visc.cn/hunan</loc>'));
+  assert.ok(sitemap.includes('https://xuanke.visc.cn/hunan/fufenzhi</loc>'));
+});

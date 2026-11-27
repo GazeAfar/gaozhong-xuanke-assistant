@@ -73,7 +73,9 @@ def parse_requirement(raw_text: str):
     return first_subject, tree, "approved"
 
 
-def read_sheet1_rows(xlsx_path: str):
+def read_sheets_rows(xlsx_path: str, sheet_indices=None):
+    if not sheet_indices:
+        sheet_indices = [1]
     with zipfile.ZipFile(xlsx_path, "r") as z:
         shared = []
         if "xl/sharedStrings.xml" in z.namelist():
@@ -81,35 +83,41 @@ def read_sheet1_rows(xlsx_path: str):
             for si in ss_root.findall("m:si", NS):
                 shared.append("".join(t.text or "" for t in si.findall(".//m:t", NS)))
 
-        rows = []
-        with z.open("xl/worksheets/sheet1.xml") as sf:
-            for _, elem in ET.iterparse(sf, events=("end",)):
-                if elem.tag.endswith("}row"):
-                    row_vals = {}
-                    max_c = -1
-                    for c in elem:
-                        if not c.tag.endswith("}c"):
-                            continue
-                        ref = c.attrib.get("r", "")
-                        ci = col_to_idx(ref) if ref else (max_c + 1)
-                        max_c = max(max_c, ci)
-                        ctype = c.attrib.get("t", "")
-                        val = ""
-                        if ctype == "s":
-                            v = c.find("m:v", NS)
-                            if v is not None and v.text is not None:
-                                val = shared[int(v.text)]
-                        elif ctype == "inlineStr":
-                            val = "".join(t.text or "" for t in c.findall(".//m:t", NS))
-                        else:
-                            v = c.find("m:v", NS)
-                            if v is not None and v.text is not None:
-                                val = v.text
-                        row_vals[ci] = val.strip()
-                    if max_c >= 0:
-                        rows.append([row_vals.get(i, "") for i in range(max_c + 1)])
-                    elem.clear()
-        return rows
+        all_sheet_rows = []
+        for sidx in sheet_indices:
+            sheet_file = f"xl/worksheets/sheet{sidx}.xml"
+            if sheet_file not in z.namelist():
+                continue
+            rows = []
+            with z.open(sheet_file) as sf:
+                for _, elem in ET.iterparse(sf, events=("end",)):
+                    if elem.tag.endswith("}row"):
+                        row_vals = {}
+                        max_c = -1
+                        for c in elem:
+                            if not c.tag.endswith("}c"):
+                                continue
+                            ref = c.attrib.get("r", "")
+                            ci = col_to_idx(ref) if ref else (max_c + 1)
+                            max_c = max(max_c, ci)
+                            ctype = c.attrib.get("t", "")
+                            val = ""
+                            if ctype == "s":
+                                v = c.find("m:v", NS)
+                                if v is not None and v.text is not None:
+                                    val = shared[int(v.text)]
+                            elif ctype == "inlineStr":
+                                val = "".join(t.text or "" for t in c.findall(".//m:t", NS))
+                            else:
+                                v = c.find("m:v", NS)
+                                if v is not None and v.text is not None:
+                                    val = v.text
+                            row_vals[ci] = val.strip()
+                        if max_c >= 0:
+                            rows.append([row_vals.get(i, "") for i in range(max_c + 1)])
+                        elem.clear()
+            all_sheet_rows.append(rows)
+        return all_sheet_rows
 
 
 def main():
@@ -129,6 +137,7 @@ def main():
     parser.add_argument("--version", default="JS-2027.1")
     parser.add_argument("--source-id", default="S01")
     parser.add_argument("--scope-note", default="")
+    parser.add_argument("--sheets", default="1", help="读取的 sheet 编号列表，逗号分隔，如 1 或 1,2")
     args = parser.parse_args()
 
     if not os.path.exists(args.input):
@@ -138,35 +147,14 @@ def main():
     with open(args.input, "rb") as f:
         sha256 = hashlib.sha256(f.read()).hexdigest()
 
-    rows = read_sheet1_rows(args.input)
+    sheet_indices = [int(x.strip()) for x in args.sheets.split(",") if x.strip().isdigit()]
+    sheet_tables = read_sheets_rows(args.input, sheet_indices)
 
     def find_col(hdrs, candidates):
         for name in candidates:
             if name in hdrs:
                 return hdrs.index(name)
         return -1
-
-    hdr_idx = -1
-    for i in range(min(10, len(rows))):
-        if (
-            find_col(rows[i], ["院校代码"]) >= 0
-            and find_col(rows[i], ["专业名称", "招生专业名称"]) >= 0
-            and find_col(rows[i], ["选考科目要求", "考试科目要求"]) >= 0
-        ):
-            hdr_idx = i
-            break
-
-    if hdr_idx < 0:
-        print("[import-official-xlsx] 未找到有效表头行（需包含 院校代码、专业名称、选考科目要求）", file=sys.stderr)
-        sys.exit(1)
-
-    headers = rows[hdr_idx]
-    idx_level = find_col(headers, ["层次"])
-    idx_inst_code = find_col(headers, ["院校代码"])
-    idx_inst_name = find_col(headers, ["院校名称"])
-    idx_major_code = find_col(headers, ["专业代码", "招生专业代码"])
-    idx_major_name = find_col(headers, ["专业名称", "招生专业名称"])
-    idx_req = find_col(headers, ["选考科目要求", "考试科目要求"])
 
     dataset_id = f"ds-{args.province.lower()}-{args.year}-{re.sub(r'[^a-z0-9]+', '-', args.version.lower()).strip('-')}"
 
@@ -176,50 +164,76 @@ def main():
     unknown_count = 0
     expr_counter = Counter()
     level_counter = Counter()
+    row_seq = 0
 
-    for row_num, r in enumerate(rows[hdr_idx + 1 :], start=1):
-        if len(r) <= max(idx_level, idx_inst_code, idx_inst_name, idx_major_code, idx_major_name, idx_req):
-            continue
-        raw_level = r[idx_level].strip()
-        level = "专科" if "专科" in raw_level or "高职" in raw_level else raw_level
-        inst_code = r[idx_inst_code].strip()
-        inst_name = r[idx_inst_name].strip()
-        major_code = r[idx_major_code].strip() or None
-        major_name = r[idx_major_name].strip()
-        req_raw = r[idx_req].strip()
+    for rows in sheet_tables:
+        hdr_idx = -1
+        for i in range(min(10, len(rows))):
+            if (
+                find_col(rows[i], ["院校代码", "学校代码"]) >= 0
+                and find_col(rows[i], ["专业名称", "招生专业名称"]) >= 0
+                and find_col(rows[i], ["选考科目要求", "考试科目要求"]) >= 0
+            ):
+                hdr_idx = i
+                break
 
-        if not inst_name or not major_name:
-            continue
+        if hdr_idx < 0:
+            print("[import-official-xlsx] 未找到有效表头行（需包含 院校代码、专业名称、选考科目要求）", file=sys.stderr)
+            sys.exit(1)
 
-        biz_key = f"{inst_code}::{major_code or ''}::{major_name}::{level}"
-        if biz_key in seen_keys:
-            dup_count += 1
-            continue
-        seen_keys.add(biz_key)
+        headers = rows[hdr_idx]
+        idx_level = find_col(headers, ["层次"])
+        idx_inst_code = find_col(headers, ["院校代码", "学校代码"])
+        idx_inst_name = find_col(headers, ["院校名称", "学校名称"])
+        idx_major_code = find_col(headers, ["专业代码", "招生专业代码"])
+        idx_major_name = find_col(headers, ["专业名称", "招生专业名称"])
+        idx_req = find_col(headers, ["选考科目要求", "考试科目要求"])
+        req_max_idx = max(c for c in [idx_level, idx_inst_code, idx_inst_name, idx_major_code, idx_major_name, idx_req] if c >= 0)
 
-        first_subject, req_tree, review_status = parse_requirement(req_raw)
-        if review_status == "unknown":
-            unknown_count += 1
+        for r in rows[hdr_idx + 1 :]:
+            if len(r) <= req_max_idx:
+                continue
+            raw_level = r[idx_level].strip() if idx_level >= 0 else "本科"
+            level = "专科" if "专科" in raw_level or "高职" in raw_level else raw_level
+            inst_code = r[idx_inst_code].strip()
+            inst_name = r[idx_inst_name].strip()
+            major_code = r[idx_major_code].strip() or None
+            major_name = r[idx_major_name].strip()
+            req_raw = r[idx_req].strip()
 
-        expr_counter[req_raw] += 1
-        level_counter[level] += 1
+            if not inst_name or not major_name:
+                continue
 
-        offerings.append(
-            {
-                "id": f"{args.province.lower()}_{args.year}_{row_num:06d}",
-                "datasetId": dataset_id,
-                "institutionCode": inst_code,
-                "institutionName": inst_name,
-                "majorCode": major_code,
-                "majorName": major_name,
-                "majorId": major_name,
-                "level": level,
-                "firstSubject": first_subject,
-                "requirementTree": req_tree,
-                "requirementRaw": req_raw,
-                "reviewStatus": review_status,
-            }
-        )
+            biz_key = f"{inst_code}::{major_code or ''}::{major_name}::{level}"
+            if biz_key in seen_keys:
+                dup_count += 1
+                continue
+            seen_keys.add(biz_key)
+
+            first_subject, req_tree, review_status = parse_requirement(req_raw)
+            if review_status == "unknown":
+                unknown_count += 1
+
+            expr_counter[req_raw] += 1
+            level_counter[level] += 1
+            row_seq += 1
+
+            offerings.append(
+                {
+                    "id": f"{args.province.lower()}_{args.year}_{row_seq:06d}",
+                    "datasetId": dataset_id,
+                    "institutionCode": inst_code,
+                    "institutionName": inst_name,
+                    "majorCode": major_code,
+                    "majorName": major_name,
+                    "majorId": major_name,
+                    "level": level,
+                    "firstSubject": first_subject,
+                    "requirementTree": req_tree,
+                    "requirementRaw": req_raw,
+                    "reviewStatus": review_status,
+                }
+            )
 
     scope_note = args.scope_note.strip() or (
         f"依据官方公布的《{os.path.basename(args.input)}》整理（共 {len(offerings)} 条）。"

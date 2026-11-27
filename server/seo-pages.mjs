@@ -768,7 +768,7 @@ function renderModesPage() {
           <div class="policy-card policy-card-main">
             <h3>实行「3+1+2」模式的省市</h3>
             <p class="policy-desc">
-              <strong>江苏省（本站已上线）</strong>、<strong>湖北省（本站已上线）</strong>、广东省、湖南省、河北省、辽宁省、福建省、重庆市、黑龙江省、吉林省、安徽省、江西省、广西壮族自治区、贵州省、甘肃省、山西省、内蒙古自治区、河南省、四川省、云南省、陕西省、青海省、宁夏回族自治区等。
+              <strong>江苏省（已上线）</strong>、<strong>湖北省（已上线）</strong>、<strong>河南省（已上线）</strong>、<strong>河北省（已上线）</strong>、<strong>湖南省（已上线）</strong>、广东省、辽宁省、福建省、重庆市、黑龙江省、吉林省、安徽省、江西省、广西壮族自治区、贵州省、甘肃省、山西省、内蒙古自治区、四川省、云南省、陕西省、青海省、宁夏回族自治区等。
             </p>
           </div>
           <div class="policy-card">
