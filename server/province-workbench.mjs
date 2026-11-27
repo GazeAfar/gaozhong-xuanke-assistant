@@ -175,7 +175,7 @@ export function renderProvinceWorkbenchPage(provinceMeta, store, siteOrigin = DE
   <meta name="twitter:title" content="${escapeHtml(title)}" />
   <meta name="twitter:description" content="${escapeHtml(description)}" />
   <link rel="icon" type="image/jpeg" href="/logo.jpg?v=2" />
-  <link rel="stylesheet" href="/styles.css?v=72" />
+  <link rel="stylesheet" href="/styles.css?v=75" />
   <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-K9LT3P6G"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -601,7 +601,7 @@ export function renderProvinceWorkbenchPage(provinceMeta, store, siteOrigin = DE
     </div>
   </dialog>
 
-  <script src="/app.js?v=53"></script>
+  <script src="/app.js?v=54"></script>
   <script>
     (function () {
       var btn = document.getElementById('btn-portal-nav-toggle');

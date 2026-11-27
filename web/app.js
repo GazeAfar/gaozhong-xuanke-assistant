@@ -312,7 +312,7 @@ function saveSnapshot(reason = 'manual') {
     localStorage.setItem(SNAPSHOT_STORAGE_KEY, JSON.stringify(payload));
     updateRestoreButtonVisibility();
     if (reason === 'manual') {
-      updateSaveStatus(`✓ 已于 ${formatTimeNow()} 暂存当前成绩（点击「填入示例」或「清空」后可随时恢复）`);
+      updateSaveStatus(`✓ 已于 ${formatTimeNow()} 暂存当前成绩（清空后可随时恢复）`);
     }
     return true;
   } catch {
