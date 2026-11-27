@@ -797,11 +797,14 @@ summary:focus:not(:focus-visible) {
 }
 
 .save-status {
-  flex: 1 1 200px;
   min-width: 0;
   font-size: var(--text-sm);
   color: var(--success);
   font-weight: 500;
+}
+
+.save-status:empty {
+  display: none;
 }
 
 /* Alerts (Yuque Callout Style) */
